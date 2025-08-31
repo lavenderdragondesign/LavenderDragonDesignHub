@@ -1,1 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LDD • Profit Calculator</title>
+  <meta name="description" content="LavenderDragonDesign Profit Calculator for Etsy & POD." />
+  <link rel="icon" href="../logo.jpg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black flex flex-col">
+  <main class="flex-1 flex items-center justify-center p-6">
+    <div class="w-full max-w-4xl rounded-2xl bg-white/95 backdrop-blur shadow-xl p-6">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="../logo.jpg" alt="LavenderDragonDesign Logo" width="64" height="64" class="rounded-full shadow" onerror="this.style.display='none'">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Profit Calculator</h1>
+          <p class="text-sm text-gray-600 -mt-1">Estimates proceeds, costs, net profit, margin & suggests a sale price.</p>
+        </div>
+      </div>
 
+      <h2 class="text-lg font-semibold text-gray-800 mt-2">Your Sales</h2>
+      <div class="grid sm:grid-cols-2 gap-4 mt-2">
+        <label class="block">
+          <span class="text-sm text-gray-700">Sale Price ($)</span>
+          <input type="number" id="pc-sale-price" value="10.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-700">Shipping Charged ($)</span>
+          <input type="number" id="pc-shipping-price-customer" value="0.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-700">Item Quantity</span>
+          <input type="number" id="pc-item-quantity" value="1" min="1" step="1" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <label class="block">
+            <span class="text-sm text-gray-700">Discount</span>
+            <input type="number" id="pc-discount-value" value="0.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+          </label>
+          <label class="block">
+            <span class="text-sm text-gray-700">Type</span>
+            <select id="pc-discount-type" class="mt-1 w-full rounded border p-2">
+              <option value="flat">$</option>
+              <option value="percent">%</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <h2 class="text-lg font-semibold text-gray-800 mt-6">Your Costs</h2>
+      <div class="grid sm:grid-cols-2 gap-4 mt-2">
+        <label class="block">
+          <span class="text-sm text-gray-700">Cost per Item ($)</span>
+          <input type="number" id="pc-cost-per-item" value="5.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-700">Actual Shipping Cost ($)</span>
+          <input type="number" id="pc-actual-shipping-cost" value="0.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-700">Etsy Listing Fee ($)</span>
+          <input type="number" id="pc-listing-fee" value="0.20" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <label class="block">
+          <span class="text-sm text-gray-700">Etsy Transaction Fee (%)</span>
+          <input type="number" id="pc-transaction-fee-percent" value="6.5" min="0" step="0.1" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <label class="block">
+            <span class="text-sm text-gray-700">Advertising Cost</span>
+            <input type="number" id="pc-advertising-cost" value="0.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+          </label>
+          <label class="block">
+            <span class="text-sm text-gray-700">Type</span>
+            <select id="pc-advertising-type" class="mt-1 w-full rounded border p-2">
+              <option value="percent">%</option>
+              <option value="flat">$</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <label class="block">
+            <span class="text-sm text-gray-700">Misc. Costs</span>
+            <input type="number" id="pc-misc-cost" value="0.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+          </label>
+          <label class="block">
+            <span class="text-sm text-gray-700">Type</span>
+            <select id="pc-misc-type" class="mt-1 w-full rounded border p-2">
+              <option value="percent">%</option>
+              <option value="flat">$</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <h2 class="text-lg font-semibold text-gray-800 mt-6">Results & Goal</h2>
+      <div class="grid sm:grid-cols-2 gap-4 mt-2 items-end">
+        <label class="block">
+          <span class="text-sm text-gray-700">Goal Net Profit ($)</span>
+          <input type="number" id="pc-goal-value" value="5.00" min="0" step="0.01" class="mt-1 w-full rounded border p-2" />
+        </label>
+        <button id="pc-calculate-btn" class="mt-2 sm:mt-0 w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+          Calculate Results & Suggested Price
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-2 text-gray-800">
+        <p class="pc-result-line"><strong>Suggested Sale Price:</strong> <span id="pc-suggested-sale-price">$0.00</span></p>
+        <hr class="border-gray-200">
+        <p class="pc-result-line"><strong>Proceeds:</strong> <span id="pc-proceeds">$0.00</span></p>
+        <p class="pc-result-line"><strong>Total Costs:</strong> <span id="pc-total-costs">$0.00</span></p>
+        <p class="pc-result-line"><strong>Net Profit:</strong> <span id="pc-net-profit">$0.00</span></p>
+        <p class="pc-result-line"><strong>Return:</strong> <span id="pc-return">0.00%</span></p>
+        <p class="pc-result-line"><strong>Margin:</strong> <span id="pc-margin">0.00%</span></p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center text-purple-300 text-sm mb-6">© <span id="year"></span> LavenderDragonDesign</footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function getVal(id) {
+      return parseFloat(document.getElementById(id)?.value) || 0;
+    }
+
+    function calculateProfit(initialSalePrice = null, updateUI = false) {
+      let salePricePerItem = (initialSalePrice !== null) ? initialSalePrice : getVal('pc-sale-price');
+      const shippingPriceCustomer = getVal('pc-shipping-price-customer');
+      const itemQuantity = Math.max(1, getVal('pc-item-quantity'));
+      const discountValue = getVal('pc-discount-value');
+      const discountType = document.getElementById('pc-discount-type')?.value;
+
+      const costPerItem = getVal('pc-cost-per-item');
+      const actualShippingCost = getVal('pc-actual-shipping-cost');
+      const listingFee = getVal('pc-listing-fee') || 0.20;
+      const transactionFeePercent = getVal('pc-transaction-fee-percent') || 6.5;
+
+      const paymentProcessingPercent = 0.03;
+      const paymentProcessingFlat = 0.25;
+
+      const advertisingCostVal = getVal('pc-advertising-cost');
+      const advertisingType = document.getElementById('pc-advertising-type')?.value;
+
+      const miscCostVal = getVal('pc-misc-cost');
+      const miscType = document.getElementById('pc-misc-type')?.value;
+
+      let totalDiscountAmount = (discountType === 'percent')
+        ? (salePricePerItem * (discountValue / 100)) * itemQuantity
+        : discountValue * itemQuantity;
+
+      const totalSalePriceAfterDiscount = (salePricePerItem * itemQuantity) - totalDiscountAmount;
+      const proceeds = totalSalePriceAfterDiscount + (shippingPriceCustomer * itemQuantity);
+
+      const totalCostPerItem = costPerItem * itemQuantity;
+      const totalActualShippingCost = actualShippingCost * itemQuantity;
+      const etsyTransactionFee = proceeds * (transactionFeePercent / 100);
+      const paymentFee = (proceeds * paymentProcessingPercent) + paymentProcessingFlat;
+
+      let advertisingCost = (advertisingType === 'percent')
+        ? (proceeds * (advertisingCostVal / 100))
+        : advertisingCostVal * itemQuantity;
+
+      let miscCosts = (miscType === 'percent')
+        ? (proceeds * (miscCostVal / 100))
+        : miscCostVal * itemQuantity;
+
+      const totalCosts = totalCostPerItem + totalActualShippingCost + listingFee + etsyTransactionFee + paymentFee + advertisingCost + miscCosts;
+      const netProfit = proceeds - totalCosts;
+
+      const returnOnInvestment = totalCosts > 0 ? (netProfit / totalCosts) * 100 : 0;
+      const profitMargin = proceeds > 0 ? (netProfit / proceeds) * 100 : 0;
+
+      if (updateUI) {
+        document.getElementById('pc-proceeds').textContent = `$${proceeds.toFixed(2)}`;
+        document.getElementById('pc-total-costs').textContent = `$${totalCosts.toFixed(2)}`;
+        document.getElementById('pc-net-profit').textContent = `$${netProfit.toFixed(2)}`;
+        document.getElementById('pc-return').textContent = `${returnOnInvestment.toFixed(2)}%`;
+        document.getElementById('pc-margin').textContent = `${profitMargin.toFixed(2)}%`;
+      }
+      return { netProfit };
+    }
+
+    function calculateSuggestedSalePrice() {
+      const goalValue = parseFloat(document.getElementById('pc-goal-value')?.value) || 0;
+      let low = 0.01, high = 10000.00, suggestedPrice = 0, iterations = 0;
+
+      while (low <= high && iterations < 100) {
+        suggestedPrice = (low + high) / 2;
+        const { netProfit } = calculateProfit(suggestedPrice, false);
+        if (Math.abs(netProfit - goalValue) < 0.01) break;
+        else if (netProfit < goalValue) low = suggestedPrice + 0.01;
+        else high = suggestedPrice - 0.01;
+        iterations++;
+      }
+      document.getElementById('pc-suggested-sale-price').textContent = (iterations < 100) ? `$${suggestedPrice.toFixed(2)}` : `$N/A`;
+    }
+
+    function runAllCalculations() {
+      calculateProfit(null, true);
+      calculateSuggestedSalePrice();
+    }
+
+    document.getElementById('pc-calculate-btn').addEventListener('click', runAllCalculations);
+  </script>
+</body>
+</html>
