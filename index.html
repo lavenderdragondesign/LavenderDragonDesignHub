@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LavenderDragonDesign • Tools</title>
-  <meta name="description" content="LavenderDragonDesign tools hub: Image Describer, Branded PDF Generator, Grid Mockup, Upscaler, Resize & Export, Profit Calculator, and more." />
   <link rel="icon" href="logo.jpg" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -12,45 +11,53 @@
   <main class="flex-1 flex items-center justify-center p-6">
     <div class="w-full max-w-6xl">
       <div class="flex flex-col items-center text-center mb-10">
-        <img src="logo.jpg" alt="LavenderDragonDesign Logo" width="150" height="150" class="rounded-full shadow-lg" onerror="this.style.display='none'">
+        <img src="logo.jpg" alt="LavenderDragonDesign Logo" width="150" height="150" class="rounded-full shadow-lg">
         <h1 class="mt-4 text-3xl font-bold text-white drop-shadow">LavenderDragonDesign Tools</h1>
         <p class="text-purple-200 text-sm">Your creative workflow hub</p>
       </div>
 
-      <div id="tools-grid" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Grid Mockup Generator</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Customizable grid previews for bundles.</p>
+          <a href="https://lddgridmockup.netlify.app/" class="mt-6">
+            <button class="w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+              Open Grid Mockup Generator
+            </button>
+          </a>
+        </div>
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">LDD Extension</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Install guide, zip, and steps.</p>
+          <a href="https://lddextension.netlify.app/" class="mt-6">
+            <button class="w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+              Open Extension
+            </button>
+          </a>
+        </div>
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Resize & Export</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Batch export multiple sizes to ZIP.</p>
+          <a href="https://lavenderdragondesigns.com/#/resize" class="mt-6">
+            <button class="w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+              Open Resize & Export
+            </button>
+          </a>
+        </div>
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Profit Calculator</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Proceeds, costs, net profit, ROI, margin + suggested price target.</p>
+          <a href="/profitcalculator/" class="mt-6">
+            <button class="w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+              Open Profit Calculator
+            </button>
+          </a>
+        </div>
+      </div>
 
       <p class="mt-10 text-sm text-purple-300 text-center">© <span id="year"></span> LavenderDragonDesign</p>
     </div>
   </main>
-
-  <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    const tools = [
-      { name: "Image Describer", desc: "AI descriptions & SEO keywords for Etsy.", link: "https://ldd-suite.netlify.app/describer" },
-      { name: "PDF Generator (Branded)", desc: "Branded PDFs with QR & download buttons.", link: "https://ldd-suite.netlify.app/pdf" },
-      { name: "Grid Mockup Generator", desc: "Customizable grid previews for bundles.", link: "https://lddgridmockup.netlify.app/" },
-      { name: "Upscaler (Local)", desc: "Local AI upscaling with clean edges.", link: "https://ldd-upscaler.netlify.app" },
-      { name: "Resize & Export", desc: "Batch export multiple sizes to ZIP.", link: "https://lavenderdragondesigns.com/#/resize" },
-      { name: "Profit Calculator", desc: "Fees, margins, offsite ads, all-in-one.", link: "https://ldd-suite.netlify.app/profit" },
-      { name: "LDD Enhancer (Extension)", desc: "Install guide, zip, and steps.", link: "https://lddextension.netlify.app/" },
-      { name: "Download ZIP (Direct)", desc: "Latest LDDEnhancer.zip direct link.", link: "https://github.com/lavenderdragondesign/lddextension/raw/refs/heads/main/LDDEnhancer.zip" }
-    ];
-
-    const grid = document.getElementById('tools-grid');
-    tools.forEach(t => {
-      const card = document.createElement('div');
-      card.className = 'rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col';
-      card.innerHTML = `
-        <h2 class="text-xl font-bold text-gray-800 tracking-tight">${t.name}</h2>
-        <p class="text-gray-600 mt-2 text-sm flex-1">${t.desc}</p>
-        <a href="${t.link}" target="_blank" rel="noreferrer" class="mt-6">
-          <button class="w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
-            Open ${t.name}
-          </button>
-        </a>`;
-      grid.appendChild(card);
-    });
-  </script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
