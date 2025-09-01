@@ -6,6 +6,31 @@
   <title>LavenderDragonDesign • Tools</title>
   <link rel="icon" href="logo.jpg" />
   <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      /* LDD Screenshot Style */
+      .ldd-card{
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: 20px;
+        box-shadow: 0 14px 28px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.08);
+      }
+      .ldd-card h2{ color:#0f172a; }
+      .ldd-card p{ color:#475569; }
+      .ldd-btn{
+        display:inline-block;
+        width:100%;
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-weight: 700;
+        color:#fff;
+        background: linear-gradient(90deg,#7c3aed,#9333ea);
+        transition: transform .02s ease-in-out, filter .2s ease;
+      }
+      .ldd-btn:hover{ filter:brightness(1.05); }
+      .ldd-btn:active{ transform: scale(0.99); }
+    </style>
+    
 </head>
 <body class="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-black flex flex-col">
   <main class="flex-1 flex items-center justify-center p-6">
@@ -17,15 +42,16 @@
       </div>
 
       
-        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
-          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Image Resizer (Inline) + Bulk</h2>
-          <p class="text-gray-600 mt-2 text-sm flex-1">Resize single images or bulk export multiple files & sizes to a ZIP. Optional 300&nbsp;DPI for PNGs.</p>
+        <div class="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+<div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col ldd-card">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Resize & Export</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Batch export multiple sizes to ZIP.</p>
           <button id="openResizer" class="mt-6 w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
-            Open Resizer
+            Open Resize & Export
           </button>
         </div>
 
-        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col ldd-card">
           <h2 class="text-xl font-bold text-gray-800 tracking-tight">Grid Mockup Generator</h2>
           <p class="text-gray-600 mt-2 text-sm flex-1">Customizable grid previews for bundles.</p>
           <a href="https://lddgridmockup.netlify.app/" class="mt-6">
@@ -34,7 +60,7 @@
             </button>
           </a>
         </div>
-        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col ldd-card">
           <h2 class="text-xl font-bold text-gray-800 tracking-tight">LDD Extension</h2>
           <p class="text-gray-600 mt-2 text-sm flex-1">Install guide, zip, and steps.</p>
           <a href="https://lddextension.netlify.app/" class="mt-6">
@@ -43,7 +69,7 @@
             </button>
           </a>
         </div>
-        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col ldd-card">
           <h2 class="text-xl font-bold text-gray-800 tracking-tight">Resize & Export</h2>
           <p class="text-gray-600 mt-2 text-sm flex-1">Batch export multiple sizes to ZIP.</p>
           <a href="https://lavenderdragondesigns.com/#/resize" class="mt-6">
@@ -52,7 +78,7 @@
             </button>
           </a>
         </div>
-        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col ldd-card">
           <h2 class="text-xl font-bold text-gray-800 tracking-tight">Profit Calculator</h2>
           <p class="text-gray-600 mt-2 text-sm flex-1">Proceeds, costs, net profit, ROI, margin + suggested price target.</p>
           <a href="/profitcalculator/" class="mt-6">
@@ -61,12 +87,14 @@
             </button>
           </a>
         </div>
+</div>
+
       </div>
 
 
       <!-- Inline Resizer Panel -->
       <section id="resizerPanel" class="mt-10 hidden">
-        <div class="rounded-2xl bg-white/95 shadow-xl p-6">
+        <div class="rounded-2xl bg-white/95 shadow-xl p-6 ldd-card">
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-2xl font-bold text-gray-900">🖼️ Image Resizer & Bulk Export</h2>
@@ -75,7 +103,7 @@
             <button id="closeResizer" class="rounded-lg px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 text-gray-800">Close</button>
           </div>
 
-          <div class="mt-6 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div class="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             <!-- File chooser -->
             <div class="md:col-span-1">
               <label class="block text-sm font-medium text-gray-800 mb-2">Select Images</label>
@@ -344,6 +372,16 @@
     renderPresets();
     renderSizeChips();
   </script>
+
+
+<footer class="mt-16 border-t border-white/10">
+  <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-purple-200">
+    <a href="https://buymeacoffee.com/lavenderdragondesign" target="_blank" rel="noopener" class="order-1 sm:order-2">
+      <img src="https://i.postimg.cc/28YhHbfZ/bmc-button.png" alt="Buy Me A Coffee" class="h-10 w-auto">
+    </a>
+    <p class="order-2 sm:order-1 text-center sm:text-left">© 2025 LavenderDragonDesign · Made by Andrea with <span class="text-pink-400">❤️</span></p>
+  </div>
+</footer>
 
 </body>
 </html>
