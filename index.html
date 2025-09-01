@@ -16,7 +16,15 @@
         <p class="text-purple-200 text-sm">Your creative workflow hub</p>
       </div>
 
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      
+        <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
+          <h2 class="text-xl font-bold text-gray-800 tracking-tight">Image Resizer (Inline) + Bulk</h2>
+          <p class="text-gray-600 mt-2 text-sm flex-1">Resize single images or bulk export multiple files & sizes to a ZIP. Optional 300&nbsp;DPI for PNGs.</p>
+          <button id="openResizer" class="mt-6 w-full rounded-xl py-2 font-medium bg-purple-600 text-white hover:bg-purple-700 active:scale-[0.99] transition">
+            Open Resizer
+          </button>
+        </div>
+
         <div class="rounded-2xl bg-white/95 backdrop-blur shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 p-6 flex flex-col">
           <h2 class="text-xl font-bold text-gray-800 tracking-tight">Grid Mockup Generator</h2>
           <p class="text-gray-600 mt-2 text-sm flex-1">Customizable grid previews for bundles.</p>
@@ -55,9 +63,287 @@
         </div>
       </div>
 
+
+      <!-- Inline Resizer Panel -->
+      <section id="resizerPanel" class="mt-10 hidden">
+        <div class="rounded-2xl bg-white/95 shadow-xl p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-gray-900">🖼️ Image Resizer & Bulk Export</h2>
+              <p class="text-gray-600 text-sm">Drop in images, pick sizes, and export a ZIP. Fast, client‑side, no uploads.</p>
+            </div>
+            <button id="closeResizer" class="rounded-lg px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 text-gray-800">Close</button>
+          </div>
+
+          <div class="mt-6 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <!-- File chooser -->
+            <div class="md:col-span-1">
+              <label class="block text-sm font-medium text-gray-800 mb-2">Select Images</label>
+              <input id="files" type="file" accept="image/png,image/jpeg" multiple class="hidden" />
+              <label for="files" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-purple-600 text-white hover:bg-purple-700 cursor-pointer">
+                Choose Files
+              </label>
+              <p id="fileSummary" class="text-xs text-gray-500 mt-2">No files selected.</p>
+
+              <div class="mt-4">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-800">
+                  <input id="dpi300" type="checkbox" class="h-4 w-4 text-purple-600">
+                  <span>Force 300 DPI (PNG)</span>
+                </label>
+              </div>
+
+              <div class="mt-4 text-xs text-gray-500">
+                <p>Tip: You can combine multiple sizes below. Each file will be exported for every selected size.</p>
+              </div>
+            </div>
+
+            <!-- Presets and custom sizes -->
+            <div class="md:col-span-2">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">Presets</h3>
+                <div id="presetGrid" class="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+              </div>
+
+              <div class="mt-4">
+                <h3 class="text-sm font-semibold text-gray-800">Custom Size</h3>
+                <div class="grid grid-cols-3 gap-2 mt-1">
+                  <input id="customW" type="number" min="1" placeholder="Width (px)" class="col-span-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <input id="customH" type="number" min="1" placeholder="Height (px)" class="col-span-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                  <button id="addSize" class="col-span-1 rounded-lg bg-gray-900 text-white px-3 py-2 text-sm hover:bg-black/90">Add Size</button>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <h3 class="text-sm font-semibold text-gray-800">Selected Sizes</h3>
+                <div id="sizeChips" class="mt-2 flex flex-wrap gap-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button id="exportOne" class="rounded-xl px-4 py-2 bg-purple-600 text-white hover:bg-purple-700">Export First File (Preview)</button>
+            <button id="exportZip" class="rounded-xl px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700">Bulk Export ZIP</button>
+            <span id="status" class="text-sm text-gray-600"></span>
+          </div>
+        </div>
+        <canvas id="work" class="hidden"></canvas>
+      </section>
+
+
       <p class="mt-10 text-sm text-purple-300 text-center">© <span id="year"></span> LavenderDragonDesign</p>
     </div>
   </main>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script>
+    // Toggle panel
+    const openBtn = document.getElementById('openResizer');
+    const panel = document.getElementById('resizerPanel');
+    const closeBtn = document.getElementById('closeResizer');
+    if (openBtn) openBtn.addEventListener('click', () => panel.classList.remove('hidden'));
+    if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
+
+    const PRESETS = [
+      { label: 'POD Default', w: 4500, h: 5400 },
+      { label: 'Tumbler Wrap', w: 2790, h: 2460 },
+      { label: 'Square', w: 1024, h: 1024 },
+      { label: 'Standard Mockup', w: 2000, h: 1500 },
+      { label: '11oz Mug (SwiftPOD)', w: 2625, h: 1050 },
+      { label: '11oz Mug (District)', w: 2475, h: 1156 },
+    ];
+
+    const presetGrid = document.getElementById('presetGrid');
+    const sizeChips = document.getElementById('sizeChips');
+    const statusEl = document.getElementById('status');
+    const filesInput = document.getElementById('files');
+    const fileSummary = document.getElementById('fileSummary');
+    const dpi300 = document.getElementById('dpi300');
+
+    let selectedSizes = [];
+
+    function renderPresets() {
+      PRESETS.forEach((p, idx) => {
+        const id = 'preset_' + idx;
+        const item = document.createElement('label');
+        item.className = 'flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm cursor-pointer hover:border-purple-400';
+        item.innerHTML = \`
+          <input type="checkbox" id="\${id}" data-w="\${p.w}" data-h="\${p.h}" class="h-4 w-4 text-purple-600">
+          <span class="font-medium text-gray-800">\${p.label}</span>
+          <span class="ml-auto text-gray-500">\${p.w}×\${p.h}</span>
+        \`;
+        item.addEventListener('change', (e) => {
+          const cb = item.querySelector('input[type=checkbox]');
+          const w = parseInt(cb.dataset.w, 10), h = parseInt(cb.dataset.h, 10);
+          const label = p.label;
+          if (cb.checked) addSize({ label, w, h });
+          else removeSize(w, h);
+        });
+        presetGrid.appendChild(item);
+      });
+    }
+
+    function addSize(s) {
+      if (selectedSizes.some(x => x.w === s.w && x.h === s.h)) return;
+      selectedSizes.push(s);
+      renderSizeChips();
+    }
+    function removeSize(w, h) {
+      selectedSizes = selectedSizes.filter(x => !(x.w === w && x.h === h));
+      renderSizeChips();
+    }
+    function renderSizeChips() {
+      sizeChips.innerHTML = '';
+      if (selectedSizes.length === 0) {
+        sizeChips.innerHTML = '<span class="text-xs text-gray-500">None selected — choose presets or add a custom size.</span>';
+        return;
+      }
+      selectedSizes.forEach(s => {
+        const chip = document.createElement('span');
+        chip.className = 'inline-flex items-center gap-2 rounded-full bg-purple-50 text-purple-800 border border-purple-200 px-3 py-1 text-xs';
+        chip.innerHTML = \`\${s.label || (s.w+'×'+s.h)} <button class="ml-1 text-purple-600 hover:text-purple-800" aria-label="Remove">&times;</button>\`;
+        chip.querySelector('button').addEventListener('click', () => removeSize(s.w, s.h));
+        sizeChips.appendChild(chip);
+      });
+    }
+
+    // Custom size
+    document.getElementById('addSize').addEventListener('click', () => {
+      const w = parseInt(document.getElementById('customW').value, 10);
+      const h = parseInt(document.getElementById('customH').value, 10);
+      if (!w || !h || w < 1 || h < 1) { alert('Enter a valid width & height'); return; }
+      addSize({ label: w+'×'+h, w, h });
+      document.getElementById('customW').value = '';
+      document.getElementById('customH').value = '';
+    });
+
+    // Files
+    filesInput.addEventListener('change', () => {
+      const n = filesInput.files ? filesInput.files.length : 0;
+      if (!n) fileSummary.textContent = 'No files selected.';
+      else fileSummary.textContent = n + ' file' + (n>1?'s':'') + ' selected.';
+    });
+
+    // Export buttons
+    document.getElementById('exportOne').addEventListener('click', async () => {
+      if (!filesInput.files || filesInput.files.length === 0) { alert('Choose at least one image'); return; }
+      if (selectedSizes.length === 0) { alert('Select at least one size'); return; }
+      const file = filesInput.files[0];
+      const img = await readImage(file);
+      const s = selectedSizes[0];
+      const blob = await resizeToBlob(img, s.w, s.h, dpi300.checked);
+      const name = baseName(file.name) + '_' + s.w + 'x' + s.h + '.png';
+      triggerDownload(blob, name);
+    });
+
+    document.getElementById('exportZip').addEventListener('click', async () => {
+      if (!filesInput.files || filesInput.files.length === 0) { alert('Choose images'); return; }
+      if (selectedSizes.length === 0) { alert('Select at least one size'); return; }
+      status('Processing... this stays on your device.');
+      const zip = new JSZip();
+      for (const file of filesInput.files) {
+        const img = await readImage(file);
+        for (const s of selectedSizes) {
+          const blob = await resizeToBlob(img, s.w, s.h, dpi300.checked);
+          const name = baseName(file.name) + '_' + s.w + 'x' + s.h + '.png';
+          zip.file(name, blob);
+        }
+      }
+      const zblob = await zip.generateAsync({ type: 'blob' });
+      const zipName = 'LDD_Resized_' + new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') + '.zip';
+      if (window.saveAs) saveAs(zblob, zipName);
+      else triggerDownload(zblob, zipName);
+      status('Done.');
+    });
+
+    function status(t){ statusEl.textContent = t; setTimeout(()=>{ if(statusEl.textContent===t) statusEl.textContent=''; }, 5000); }
+
+    function readImage(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    async function resizeToBlob(img, w, h, want300) {
+      const canvas = document.getElementById('work');
+      const ctx = canvas.getContext('2d');
+      canvas.width = w; canvas.height = h;
+      ctx.clearRect(0,0,w,h);
+      ctx.drawImage(img, 0, 0, w, h);
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      if (!blob) throw new Error('Canvas toBlob failed');
+      if (!want300) return blob;
+      // inject pHYs 300 DPI into PNG
+      const buf = await blob.arrayBuffer();
+      const out = insertDPIIntoPNG(new Uint8Array(buf), create300DPIChunk(300));
+      return new Blob([out], { type: 'image/png' });
+    }
+
+    function baseName(n){ return n.replace(/\.[^.]+$/, ''); }
+
+    // --- PNG helpers (pHYs at 300 DPI) ---
+    function create300DPIChunk(dpi) {
+      const ppm = Math.round(dpi / 0.0254);
+      const data = new Uint8Array(9);
+      data[0] = (ppm >>> 24) & 0xff;
+      data[1] = (ppm >>> 16) & 0xff;
+      data[2] = (ppm >>>  8) & 0xff;
+      data[3] = (ppm       ) & 0xff;
+      data[4] = (ppm >>> 24) & 0xff;
+      data[5] = (ppm >>> 16) & 0xff;
+      data[6] = (ppm >>>  8) & 0xff;
+      data[7] = (ppm       ) & 0xff;
+      data[8] = 1; // meters
+      return createPNGChunk('pHYs', data);
+    }
+    function createPNGChunk(type, data) {
+      const typeBytes = new TextEncoder().encode(type);
+      const len = data.length;
+      const crcInput = new Uint8Array(typeBytes.length + data.length);
+      crcInput.set(typeBytes, 0);
+      crcInput.set(data, typeBytes.length);
+      const crc = crc32(crcInput);
+      const out = new Uint8Array(12 + len);
+      out[0] = (len >>> 24) & 0xff;
+      out[1] = (len >>> 16) & 0xff;
+      out[2] = (len >>> 8) & 0xff;
+      out[3] = (len) & 0xff;
+      out.set(typeBytes, 4);
+      out.set(data, 8);
+      out[8+len]   = (crc >>> 24) & 0xff;
+      out[8+len+1] = (crc >>> 16) & 0xff;
+      out[8+len+2] = (crc >>>  8) & 0xff;
+      out[8+len+3] = (crc) & 0xff;
+      return out;
+    }
+    function insertDPIIntoPNG(pngBytes, chunkBytes) {
+      const head = pngBytes.slice(0, 33);
+      const tail = pngBytes.slice(33);
+      const merged = new Uint8Array(head.length + chunkBytes.length + tail.length);
+      merged.set(head, 0);
+      merged.set(chunkBytes, head.length);
+      merged.set(tail, head.length + chunkBytes.length);
+      return merged;
+    }
+    function crc32(buf) {
+      let c = 0xffffffff;
+      for (let i = 0; i < buf.length; i++) {
+        c = (c ^ buf[i]) >>> 0;
+        for (let k = 0; k < 8; k++) {
+          c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+      }
+      return (c ^ 0xffffffff) >>> 0;
+    }
+
+    renderPresets();
+    renderSizeChips();
+  </script>
+
 </body>
 </html>
