@@ -7,28 +7,31 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const primaryTools = TOOLS.filter(tool => tool.status !== 'lab')
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-      <header className="border-b bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between gap-4">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-5 py-4 flex items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-brand.ink text-white font-bold">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-brand.ink text-white font-bold text-xl shadow-md shadow-slate-900/60">
               L
             </span>
             <div className="leading-tight">
-              <div className="font-semibold">LDDTools.lol</div>
-              <div className="text-xs text-gray-500">Your POD + Etsy toolbox</div>
+              <div className="font-semibold text-base">LDDTools.lol</div>
+              <div className="text-[11px] text-slate-400">Your POD · Etsy · System toolbox</div>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm">
+          <nav className="hidden md:flex items-center gap-5 text-sm">
             {primaryTools.map(tool => (
               <NavLink
                 key={tool.id}
                 to={tool.path}
                 className={({ isActive }) =>
-                  isActive
-                    ? 'text-gray-900 font-medium'
-                    : 'text-gray-600 hover:text-gray-900'
+                  [
+                    'transition-colors',
+                    isActive
+                      ? 'text-brand.neon font-semibold'
+                      : 'text-slate-300 hover:text-white'
+                  ].join(' ')
                 }
               >
                 {tool.shortName ?? tool.name}
@@ -40,7 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             href="https://www.buymeacoffee.com/lavenderdragon"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-900 px-3 py-1.5 text-xs font-medium hover:bg-amber-200"
+            className="inline-flex items-center gap-2 rounded-full bg-amber-400/90 text-slate-950 px-3.5 py-1.5 text-xs font-semibold shadow-md shadow-amber-500/40 hover:bg-amber-300"
           >
             <Coffee className="h-4 w-4" />
             <span>Buy me a coffee</span>
@@ -49,19 +52,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mx-auto max-w-6xl px-5 py-8 md:py-10">
           {children}
         </div>
       </main>
 
-      <footer className="border-t bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500 flex items-center justify-between">
+      <footer className="border-t border-slate-900 bg-slate-950/95">
+        <div className="mx-auto max-w-6xl px-5 py-5 text-[11px] text-slate-500 flex items-center justify-between gap-4">
           <span>© {new Date().getFullYear()} LavenderDragonDesign</span>
           <div className="flex items-center gap-3">
-            <a href="/privacy" className="hover:text-gray-700">
+            <a href="/privacy" className="hover:text-slate-300">
               Privacy
             </a>
-            <a href="/terms" className="hover:text-gray-700">
+            <a href="/terms" className="hover:text-slate-300">
               Terms
             </a>
           </div>

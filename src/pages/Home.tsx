@@ -7,9 +7,11 @@ export default function Home() {
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold">Create faster. Export cleaner. Sell more.</h1>
-        <p className="text-gray-600">
-          Mockups, PDFs, batch resizing, Windows tweaks, and MyDesigns automations — all in one place.
+        <h1 className="text-3xl md:text-4xl font-semibold text-slate-50 mb-3">
+          Create faster. Export cleaner. Sell more.
+        </h1>
+        <p className="text-slate-400 text-sm md:text-base max-w-2xl">
+          Mockups, PDFs, batch resizing, Windows tweaks, and MyDesigns automations — all in one place on LDDTools.lol.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -25,7 +27,7 @@ export default function Home() {
           return (
             <ToolCard
               key={tool.id}
-              icon={<Icon className="h-8 w-8 text-brand.ink" />}
+              icon={<Icon className="h-8 w-8" />}
               title={tool.name}
               description={tool.description}
               to={tool.path}
