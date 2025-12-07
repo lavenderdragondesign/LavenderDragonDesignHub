@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { Image as ImageIcon, Zap, Loader2, Download, Trash2, Settings2 } from 'lucide-react'
 import JSZip from 'jszip'
 import AppShell from '../components/AppShell'
@@ -110,9 +110,49 @@ export default function Resizer() {
   const [images, setImages] = useState<ImageItem[]>([])
   const [activeImageId, setActiveImageId] = useState<string | null>(null)
 
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  const workerRef = useRef<Worker | null>(null)
+  const pendingJobsRef = useRef<Map<string, (result: { success: boolean; buffer?: ArrayBuffer; error?: string }) => void>>(new Map())
+
+  useEffect(() => {
+    try {
+      const worker = new Worker(new URL('../workers/resizerWorker.ts', import.meta.url), { type: 'module' })
+      workerRef.current = worker
+
+      worker.onmessage = (event: MessageEvent) => {
+        const data = event.data as {
+          messageId?: string
+          success?: boolean
+          buffer?: ArrayBuffer
+          error?: string
+        }
+
+        if (!data || !data.messageId) return
+        const resolver = pendingJobsRef.current.get(data.messageId)
+        if (!resolver) return
+        pendingJobsRef.current.delete(data.messageId)
+
+        if (data.success && data.buffer) {
+          resolver({ success: true, buffer: data.buffer })
+        } else {
+          resolver({ success: false, error: data.error || 'Worker error' })
+        }
+      }
+
+      return () => {
+        worker.terminate()
+        workerRef.current = null
+        pendingJobsRef.current.clear()
+      }
+    } catch (err) {
+      console.error('Failed to initialise resizer worker', err)
+    }
+  }, [])
+
   const activeImage = images.find(img => img.id === activeImageId) ?? images[0] ?? null
+
 
   const toggleSize = (id: string) => {
     setSelectedSizes(prev =>
@@ -217,6 +257,39 @@ export default function Resizer() {
     return 6
   }
 
+  const runWorkerJob = (job: Job, img: ImageItem): Promise<ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+      const worker = workerRef.current
+      if (!worker) {
+        reject(new Error('Worker not available'))
+        return
+      }
+
+      const messageId = `${job.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      pendingJobsRef.current.set(messageId, result => {
+        if (result.success && result.buffer) {
+          resolve(result.buffer)
+        } else {
+          reject(new Error(result.error || 'Worker resize failed'))
+        }
+      })
+
+      worker.postMessage(
+        {
+          type: 'resize',
+          messageId,
+          jobId: job.id,
+          width: job.width,
+          height: job.height,
+          src: img.src,
+          fileName: img.fileName
+        },
+        []
+      )
+    })
+  }
+
+
   const runJobsAndZip = async () => {
     if (!activeImage || !selectedSizes.length) return
 
@@ -250,33 +323,42 @@ export default function Resizer() {
       try {
         updateJobStatus(job.id, 'working')
 
-        const canvas = document.createElement('canvas')
-        canvas.width = job.width
-        canvas.height = job.height
-        const ctx = canvas.getContext('2d')
-        if (!ctx) throw new Error('No canvas context')
+        let arrayBuffer: ArrayBuffer
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        if (workerRef.current) {
+          // Prefer web worker path to keep UI responsive
+          arrayBuffer = await runWorkerJob(job, activeImage)
+        } else {
+          // Fallback: do work on main thread if worker is unavailable
+          const canvas = document.createElement('canvas')
+          canvas.width = job.width
+          canvas.height = job.height
+          const ctx = canvas.getContext('2d')
+          if (!ctx) throw new Error('No canvas context')
 
-        const srcW = activeImage.element.width
-        const srcH = activeImage.element.height
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        const scale = Math.max(job.width / srcW, job.height / srcH)
-        const drawW = srcW * scale
-        const drawH = srcH * scale
-        const offsetX = (job.width - drawW) / 2
-        const offsetY = (job.height - drawH) / 2
+          const srcW = activeImage.element.width
+          const srcH = activeImage.element.height
 
-        ctx.imageSmoothingEnabled = true
-        ctx.imageSmoothingQuality = 'high'
-        ctx.drawImage(activeImage.element, offsetX, offsetY, drawW, drawH)
+          const scale = Math.max(job.width / srcW, job.height / srcH)
+          const drawW = srcW * scale
+          const drawH = srcH * scale
+          const offsetX = (job.width - drawW) / 2
+          const offsetY = (job.height - drawH) / 2
 
-        const blob: Blob | null = await new Promise(resolve =>
-          canvas.toBlob(b => resolve(b), 'image/png', 1.0)
-        )
-        if (!blob) throw new Error('Failed to create PNG')
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
+          ctx.drawImage(activeImage.element, offsetX, offsetY, drawW, drawH)
 
-        let arrayBuffer = await blob.arrayBuffer()
+          const blob: Blob | null = await new Promise(resolve =>
+            canvas.toBlob(b => resolve(b), 'image/png', 1.0)
+          )
+          if (!blob) throw new Error('Failed to create PNG')
+
+          arrayBuffer = await blob.arrayBuffer()
+        }
+
         arrayBuffer = setPngDPI(arrayBuffer, 300)
 
         const baseName = (activeImage.fileName || 'design').replace(/\.[^.]+$/, '')
