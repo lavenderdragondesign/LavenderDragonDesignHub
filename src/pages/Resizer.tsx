@@ -177,7 +177,8 @@ export default function Resizer() {
   const runJobsAndZip = async () => {
     if (!imageElement || !imageSrc || !selectedSizes.length) return
 
-    const parsedJobs: Job[] = selectedSizes
+    const allIds = Array.from(new Set([...selectedSizes, ...customSizes]))
+    const parsedJobs: Job[] = allIds
       .map(id => {
         const parsed = parseSize(id)
         if (!parsed) return null
