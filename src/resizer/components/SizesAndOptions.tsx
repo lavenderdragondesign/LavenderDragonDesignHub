@@ -179,7 +179,7 @@ const SizesAndOptions: React.FC<SizesAndOptionsProps> = ({
           className="w-full rounded-md bg-slate-950 border border-slate-700 px-2 py-1 text-[11px] text-slate-100"
         />
         <p className="text-[10px] text-slate-500">
-          Use tokens: {{'{{basename}}'}}, {{'{{width}}'}}, {{'{{height}}'}}, {{'{{profile}}'}}.
+          Use tokens: {'{{basename}}'}, {'{{width}}'}, {'{{height}}'}, {'{{profile}}'}.
         </p>
       </div>
     </div>
