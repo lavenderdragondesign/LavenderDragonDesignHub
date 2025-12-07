@@ -3,6 +3,58 @@ import { Image as ImageIcon, Zap, Loader2, Download, Trash2, Settings2 } from 'l
 import JSZip from 'jszip'
 import AppShell from '../components/AppShell'
 
+function crc32ForPng(buf: Uint8Array) {
+  let c = ~0
+  for (let n = 0; n < buf.length; n++) {
+    c ^= buf[n]
+    for (let k = 0; k < 8; k++) {
+      c = (c >>> 1) ^ (0xEDB88320 & -(c & 1))
+    }
+  }
+  return (~c) >>> 0
+}
+
+function setPngDPI(pngArrayBuffer: ArrayBuffer, dpi = 300): ArrayBuffer {
+  const png = new Uint8Array(pngArrayBuffer)
+  // Basic sanity check for PNG signature
+  if (
+    png[0] !== 0x89 || png[1] !== 0x50 || png[2] !== 0x4E || png[3] !== 0x47 ||
+    png[4] !== 0x0D || png[5] !== 0x0A || png[6] !== 0x1A || png[7] !== 0x0A
+  ) {
+    return pngArrayBuffer
+  }
+
+  const ppm = Math.round(dpi / 0.0254)
+
+  // Build pHYs chunk (length 9, type 'pHYs', data 9 bytes, then CRC)
+  const chunk = new Uint8Array(4 + 4 + 9 + 4)
+  // length = 9
+  chunk[0] = 0; chunk[1] = 0; chunk[2] = 0; chunk[3] = 9
+  // type 'pHYs'
+  chunk[4] = 0x70; chunk[5] = 0x48; chunk[6] = 0x59; chunk[7] = 0x73
+
+  // data: 4 bytes X, 4 bytes Y, 1 byte unit
+  const dv = new DataView(chunk.buffer)
+  dv.setUint32(8, ppm)     // X pixels per meter
+  dv.setUint32(12, ppm)    // Y pixels per meter
+  chunk[16] = 1            // unit = meter
+
+  // CRC over type+data
+  const crc = crc32ForPng(chunk.subarray(4, 17))
+  chunk[17] = (crc >>> 24) & 255
+  chunk[18] = (crc >>> 16) & 255
+  chunk[19] = (crc >>> 8) & 255
+  chunk[20] = crc & 255
+
+  // Insert after IHDR (first chunk), which ends at byte 33
+  const out = new Uint8Array(png.length + chunk.length)
+  out.set(png.subarray(0, 33), 0)
+  out.set(chunk, 33)
+  out.set(png.subarray(33), 33 + chunk.length)
+
+  return out.buffer
+}
+
 type PerfMode = 'safe' | 'balanced' | 'turbo'
 
 interface SizePreset {
@@ -182,7 +234,8 @@ export default function Resizer() {
         const baseName = (fileName || 'design').replace(/\.[^.]+$/, '')
         const outName = `${baseName}_${job.width}x${job.height}_300dpi.png`
 
-        const arrayBuffer = await blob.arrayBuffer()
+        let arrayBuffer = await blob.arrayBuffer()
+        arrayBuffer = setPngDPI(arrayBuffer, 300)
         zip.file(outName, arrayBuffer)
 
         updateJobStatus(job.id, 'done')
