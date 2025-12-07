@@ -113,17 +113,26 @@ export default function Resizer() {
   const [activeImageId, setActiveImageId] = useState<string | null>(null)
 
 
+  
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const workerRef = useRef<Worker | null>(null)
-  const pendingJobsRef = useRef<Map<string, (result: { success: boolean; buffer?: ArrayBuffer; error?: string }) => void>>(new Map())
+  const workerPoolRef = useRef<Worker[]>([])
+  const pendingJobsRef = useRef<
+    Map<string, (result: { success: boolean; buffer?: ArrayBuffer; error?: string }) => void>
+  >(new Map())
+  const workerIndexRef = useRef(0)
 
   useEffect(() => {
     try {
-      const worker = new Worker(new URL('../workers/resizerWorker.ts', import.meta.url), { type: 'module' })
-      workerRef.current = worker
+      const hardwareThreads =
+        typeof navigator !== 'undefined' && 'hardwareConcurrency' in navigator
+          ? (navigator as any).hardwareConcurrency || 2
+          : 2
+      const workerCount = Math.max(1, Math.min(4, hardwareThreads))
 
-      worker.onmessage = (event: MessageEvent) => {
+      const workers: Worker[] = []
+
+      const handleMessage = (event: MessageEvent) => {
         const data = event.data as {
           messageId?: string
           success?: boolean
@@ -143,13 +152,23 @@ export default function Resizer() {
         }
       }
 
+      for (let i = 0; i < workerCount; i++) {
+        const worker = new Worker(new URL('../workers/resizerWorker.ts', import.meta.url), {
+          type: 'module'
+        })
+        worker.onmessage = handleMessage
+        workers.push(worker)
+      }
+
+      workerPoolRef.current = workers
+
       return () => {
-        worker.terminate()
-        workerRef.current = null
+        workerPoolRef.current.forEach(w => w.terminate())
+        workerPoolRef.current = []
         pendingJobsRef.current.clear()
       }
     } catch (err) {
-      console.error('Failed to initialise resizer worker', err)
+      console.error('Failed to initialise resizer workers', err)
     }
   }, [])
 
@@ -259,13 +278,18 @@ export default function Resizer() {
     return 6
   }
 
+  
   const runWorkerJob = (job: Job, img: ImageItem): Promise<ArrayBuffer> => {
     return new Promise((resolve, reject) => {
-      const worker = workerRef.current
-      if (!worker) {
-        reject(new Error('Worker not available'))
+      const workers = workerPoolRef.current
+      if (!workers || workers.length === 0) {
+        reject(new Error('Worker pool not available'))
         return
       }
+
+      const idx = workerIndexRef.current % workers.length
+      workerIndexRef.current += 1
+      const worker = workers[idx]
 
       const messageId = `${job.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       pendingJobsRef.current.set(messageId, result => {
@@ -277,6 +301,20 @@ export default function Resizer() {
       })
 
       worker.postMessage(
+        {
+          type: 'resize',
+          messageId,
+          jobId: job.id,
+          width: job.width,
+          height: job.height,
+          src: img.src,
+          fileName: img.fileName
+        },
+        []
+      )
+    })
+  }
+(
         {
           type: 'resize',
           messageId,
@@ -338,7 +376,7 @@ export default function Resizer() {
 
         let arrayBuffer: ArrayBuffer
 
-        if (workerRef.current) {
+        if (workerPoolRef.current && workerPoolRef.current.length) {
           // Prefer web worker path to keep UI responsive
           arrayBuffer = await runWorkerJob(job, img)
         } else {
@@ -838,7 +876,7 @@ export default function Resizer() {
                     >
                       <div>
                         <p className="text-black font-medium">
-                          {job.id.replace('x', ' × ')}
+                          {`${job.width} × ${job.height}`}
                         </p>
                         <p className="text-[11px] text-purple-700">
                           {job.status === 'working'
