@@ -1,20 +1,15 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Mockup from './pages/Mockup'
-import Resizer from './pages/Resizer'
-import PdfBeta from './pages/PdfBeta'
-import ExtensionTools from './pages/ExtensionTools'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import ResizerPage from './pages/ResizerPage';
 
-export default function App() {
+const App: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/mockup" element={<Mockup />} />
-      <Route path="/resizer" element={<Resizer />} />
-      <Route path="/pdf" element={<PdfBeta />} />
-      <Route path="/extension" element={<ExtensionTools />} />
-      <Route path="*" element={<Home />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/resizer" element={<ResizerPage />} />
     </Routes>
-  )
-}
+  );
+};
+
+export default App;
