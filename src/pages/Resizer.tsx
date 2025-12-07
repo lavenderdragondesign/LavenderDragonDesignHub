@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { Image as ImageIcon, Zap, Loader2, Download, Trash2, Settings2 } from 'lucide-react'
+import JSZip from 'jszip'
 import AppShell from '../components/AppShell'
 
 type PerfMode = 'safe' | 'balanced' | 'turbo'
@@ -11,12 +12,21 @@ interface SizePreset {
 }
 
 const POD_PRESETS: SizePreset[] = [
-  { id: '4500x5400', label: '4500 × 5400', note: 'Standard POD' },
-  { id: '3000x3000', label: '3000 × 3000', note: 'Square' },
-  { id: '2625x1050', label: '2625 × 1050', note: 'Mug 11oz' },
+  { id: '4500x5400', label: '4500 × 5400', note: 'Standard POD (15×18" at 300 DPI)' },
+  { id: '3000x3000', label: '3000 × 3000', note: 'Square (10×10" at 300 DPI)' },
+  { id: '2625x1050', label: '2625 × 1050', note: 'Mug 11oz template' },
   { id: '2700x2025', label: '2700 × 2025', note: 'Etsy 4:3' },
   { id: '2048x2048', label: '2048 × 2048', note: 'Generic / KDP' }
 ]
+
+type JobStatus = 'pending' | 'working' | 'done' | 'error'
+
+interface Job {
+  id: string
+  width: number
+  height: number
+  status: JobStatus
+}
 
 export default function Resizer() {
   const [status, setStatus] = useState<'idle' | 'preparing' | 'rendering' | 'zipping'>('idle')
@@ -25,7 +35,7 @@ export default function Resizer() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
   const [customWidth, setCustomWidth] = useState('')
   const [customHeight, setCustomHeight] = useState('')
-  const [jobs, setJobs] = useState<string[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
 
   const [fileName, setFileName] = useState<string | null>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
@@ -35,6 +45,7 @@ export default function Resizer() {
     sizeKB: number
     format: string
   } | null>(null)
+  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -64,9 +75,7 @@ export default function Resizer() {
   }
 
   const handleBrowseClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click()
-    }
+    fileInputRef.current?.click()
   }
 
   const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = event => {
@@ -86,6 +95,7 @@ export default function Resizer() {
       const img = new Image()
       img.onload = () => {
         setImageSrc(result)
+        setImageElement(img)
         setImageInfo({
           width: img.width,
           height: img.height,
@@ -98,21 +108,128 @@ export default function Resizer() {
     reader.readAsDataURL(file)
   }
 
-  const prepareJobs = () => {
-    if (!selectedSizes.length) return
-    setStatus('preparing')
-    setJobs(selectedSizes)
+  const parseSize = (id: string): { width: number; height: number } | null => {
+    const [w, h] = id.split('x').map(Number)
+    if (!w || !h) return null
+    return { width: w, height: h }
+  }
 
-    // Stubbed flow: replace with real canvas / worker resize + ZIP later
-    setTimeout(() => {
-      setStatus('rendering')
-      setTimeout(() => {
-        setStatus('zipping')
-        setTimeout(() => {
-          setStatus('idle')
-        }, 600)
-      }, 900)
-    }, 400)
+  const getConcurrency = (mode: PerfMode) => {
+    if (mode === 'safe') return 1
+    if (mode === 'balanced') return 3
+    return 6
+  }
+
+  const runJobsAndZip = async () => {
+    if (!imageElement || !imageSrc || !selectedSizes.length) return
+
+    const parsedJobs: Job[] = selectedSizes
+      .map(id => {
+        const parsed = parseSize(id)
+        if (!parsed) return null
+        return {
+          id,
+          width: parsed.width,
+          height: parsed.height,
+          status: 'pending' as JobStatus
+        }
+      })
+      .filter((j): j is Job => j !== null)
+
+    if (!parsedJobs.length) return
+
+    setStatus('preparing')
+    setJobs(parsedJobs)
+
+    const zip = new JSZip()
+    const concurrency = getConcurrency(perfMode)
+
+    const updateJobStatus = (id: string, status: JobStatus) => {
+      setJobs(prev => prev.map(job => (job.id === id ? { ...job, status } : job)))
+    }
+
+    const processJob = async (job: Job) => {
+      try {
+        updateJobStatus(job.id, 'working')
+
+        const canvas = document.createElement('canvas')
+        canvas.width = job.width
+        canvas.height = job.height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) throw new Error('No canvas context')
+
+        // Transparent background, then draw with "cover" behavior
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        const srcW = imageElement.width
+        const srcH = imageElement.height
+
+        const scale = Math.max(job.width / srcW, job.height / srcH)
+        const drawW = srcW * scale
+        const drawH = srcH * scale
+        const offsetX = (job.width - drawW) / 2
+        const offsetY = (job.height - drawH) / 2
+
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high'
+        ctx.drawImage(imageElement, offsetX, offsetY, drawW, drawH)
+
+        const blob: Blob | null = await new Promise(resolve =>
+          canvas.toBlob(b => resolve(b), 'image/png', 1.0)
+        )
+        if (!blob) throw new Error('Failed to create PNG')
+
+        const baseName = (fileName || 'design').replace(/\.[^.]+$/, '')
+        const outName = `${baseName}_${job.width}x${job.height}_300dpi.png`
+
+        const arrayBuffer = await blob.arrayBuffer()
+        zip.file(outName, arrayBuffer)
+
+        updateJobStatus(job.id, 'done')
+      } catch (err) {
+        console.error(err)
+        updateJobStatus(job.id, 'error')
+      }
+    }
+
+    setStatus('rendering')
+
+    const queue = [...parsedJobs]
+    const workers: Promise<void>[] = []
+
+    const runWorker = async () => {
+      while (queue.length) {
+        const job = queue.shift()
+        if (!job) break
+        await processJob(job)
+      }
+    }
+
+    const workerCount = Math.min(concurrency, parsedJobs.length)
+    for (let i = 0; i < workerCount; i++) {
+      workers.push(runWorker())
+    }
+
+    await Promise.all(workers)
+
+    setStatus('zipping')
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    const url = URL.createObjectURL(zipBlob)
+    const link = document.createElement('a')
+    const baseName = (fileName || 'design').replace(/\.[^.]+$/, '')
+    link.href = url
+    link.download = `${baseName}_resized_300dpi.zip`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    setStatus('idle')
+  }
+
+  const handleRunClick = async () => {
+    if (!imageElement || !imageSrc || !selectedSizes.length || status !== 'idle') return
+    await runJobsAndZip()
   }
 
   const formatLabel =
@@ -123,9 +240,9 @@ export default function Resizer() {
   return (
     <AppShell>
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2 text-slate-50">Bulk Resizer</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold mb-2 text-slate-50">Bulk Resizer</h1>
         <p className="text-slate-400 text-sm md:text-base max-w-2xl">
-          Drop a PNG master once, pick all your POD / Etsy sizes, and download everything together as a single ZIP.
+          Drop a PNG master once, pick all your POD / Etsy sizes (built around 300 DPI), and download everything together as a single ZIP.
         </p>
       </div>
 
@@ -183,7 +300,7 @@ export default function Resizer() {
                     className={[
                       'px-2.5 py-1 text-[11px] rounded-full',
                       perfMode === m.id
-                        ? 'bg-brand.neon text-slate-950'
+                        ? 'bg-brand.neon text-slate-50'
                         : 'text-slate-300 hover:bg-slate-800'
                     ]
                       .filter(Boolean)
@@ -290,7 +407,7 @@ export default function Resizer() {
                 className={[
                   'px-3 py-1 rounded-full',
                   activeTab === 'pod'
-                    ? 'bg-brand.neon text-slate-950'
+                    ? 'bg-brand.neon text-slate-50'
                     : 'text-slate-300'
                 ].join(' ')}
               >
@@ -302,7 +419,7 @@ export default function Resizer() {
                 className={[
                   'px-3 py-1 rounded-full',
                   activeTab === 'social'
-                    ? 'bg-brand.neon text-slate-950'
+                    ? 'bg-brand.neon text-slate-50'
                     : 'text-slate-300'
                 ].join(' ')}
               >
@@ -314,7 +431,7 @@ export default function Resizer() {
                 className={[
                   'px-3 py-1 rounded-full',
                   activeTab === 'custom'
-                    ? 'bg-brand.neon text-slate-950'
+                    ? 'bg-brand.neon text-slate-50'
                     : 'text-slate-300'
                 ].join(' ')}
               >
@@ -395,7 +512,7 @@ export default function Resizer() {
               <button
                 type="button"
                 onClick={addCustomSize}
-                className="ml-1 inline-flex items-center gap-1 rounded-lg bg-brand.neon text-slate-950 px-3 py-1 text-xs font-semibold hover:brightness-110"
+                className="ml-1 inline-flex items-center gap-1 rounded-lg bg-brand.neon text-slate-50 px-3 py-1 text-xs font-semibold hover:brightness-110"
               >
                 <Settings2 className="h-3 w-3" />
                 Add size
@@ -428,26 +545,30 @@ export default function Resizer() {
                 <div className="divide-y divide-slate-800">
                   {jobs.map(job => (
                     <div
-                      key={job}
+                      key={job.id}
                       className="flex items-center justify-between px-3 py-2"
                     >
                       <div>
                         <p className="text-slate-100 font-medium">
-                          {job.replace('x', ' × ')}
+                          {job.id.replace('x', ' × ')}
                         </p>
                         <p className="text-[11px] text-slate-400">
-                          {status === 'rendering'
+                          {job.status === 'working'
                             ? 'Rendering…'
-                            : status === 'zipping'
-                            ? 'Packing into ZIP…'
+                            : job.status === 'done'
+                            ? 'Ready in ZIP'
+                            : job.status === 'error'
+                            ? 'Error – skipped'
                             : 'Queued'}
                         </p>
                       </div>
                       <span className="rounded-full bg-slate-900 border border-slate-700 px-2 py-1 text-[11px] text-slate-300">
-                        {status === 'rendering'
+                        {job.status === 'working'
                           ? 'Working'
-                          : status === 'zipping'
-                          ? 'Zipping'
+                          : job.status === 'done'
+                          ? 'Done'
+                          : job.status === 'error'
+                          ? 'Error'
                           : 'Pending'}
                       </span>
                     </div>
@@ -458,17 +579,16 @@ export default function Resizer() {
 
             <button
               type="button"
-              onClick={prepareJobs}
-              disabled={!selectedSizes.length || status !== 'idle' || !imageSrc}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand.neon px-4 py-2.5 text-sm md:text-base font-semibold text-slate-950 shadow-lg shadow-emerald-400/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={handleRunClick}
+              disabled={!selectedSizes.length || status !== 'idle' || !imageSrc || !imageElement}
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand.neon px-4 py-2.5 text-sm md:text-base font-semibold text-slate-50 shadow-lg shadow-emerald-400/30 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Download className="h-4 w-4" />
               {status === 'idle' ? 'Render & Download ZIP' : 'Working…'}
             </button>
             <p className="mt-1 text-[11px] text-slate-500 leading-relaxed">
-              Performance mode will control how many jobs run in parallel once this is wired into your real resize engine.
-              <span className="font-semibold text-slate-300"> Turbo</span> for strong GPUs,
-              <span className="font-semibold text-slate-300"> Safe</span> for older machines.
+              Exported PNGs are sized for 300 DPI workflows (e.g. 4500×5400 = 15×18 inches at 300 DPI).  
+              Most POD sites ignore embedded DPI and only care about pixel resolution, which this tool targets.
             </p>
           </div>
         </div>
