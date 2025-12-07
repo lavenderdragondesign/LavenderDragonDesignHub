@@ -64,8 +64,10 @@ interface SizePreset {
 }
 
 const POD_PRESETS: SizePreset[] = [
-  { id: '4500x5400', label: '4500 × 5400', note: 'Standard POD (15×18" at 300 DPI)' },
-  { id: '3000x3000', label: '3000 × 3000', note: 'Square (10×10" at 300 DPI)' },
+  { id: '4500x5400', label: '4500 × 5400', note: 'Standard POD (15×18\" at 300 DPI)' },
+  { id: '3000x3000', label: '3000 × 3000', note: 'Legacy square (10×10\" at 300 DPI)' },
+  { id: '1024x1024', label: '1024 × 1024', note: 'Square preview (1024×1024)' },
+  { id: '1500x2000', label: '1500 × 2000', note: 'Mockup base (5×6.67\" at 300 DPI)' },
   { id: '2625x1050', label: '2625 × 1050', note: 'Mug 11oz template' },
   { id: '2700x2025', label: '2700 × 2025', note: 'Etsy 4:3' },
   { id: '2048x2048', label: '2048 × 2048', note: 'Generic / KDP' }
@@ -85,6 +87,7 @@ export default function Resizer() {
   const [perfMode, setPerfMode] = useState<PerfMode>('balanced')
   const [activeTab, setActiveTab] = useState<'pod' | 'social' | 'custom'>('pod')
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
+  const [customSizes, setCustomSizes] = useState<string[]>([])
   const [customWidth, setCustomWidth] = useState('')
   const [customHeight, setCustomHeight] = useState('')
   const [jobs, setJobs] = useState<Job[]>([])
@@ -122,6 +125,7 @@ export default function Resizer() {
     if (!selectedSizes.includes(id)) {
       setSelectedSizes(prev => [...prev, id])
     }
+    setCustomSizes(prev => (prev.includes(id) ? prev : [...prev, id]))
     setCustomWidth('')
     setCustomHeight('')
   }
@@ -338,31 +342,41 @@ export default function Resizer() {
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="uppercase tracking-wide text-slate-500">Mode</span>
-              <div className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900 px-1">
-                {[
-                  { id: 'safe', label: 'Safe' },
-                  { id: 'balanced', label: 'Balanced' },
-                  { id: 'turbo', label: 'Turbo' }
-                ].map(m => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setPerfMode(m.id as PerfMode)}
-                    className={[
-                      'px-2.5 py-1 text-[11px] rounded-full',
-                      perfMode === m.id
-                        ? 'bg-brand.neon text-slate-50'
-                        : 'text-slate-300 hover:bg-slate-800'
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-                <Zap className="h-3 w-3 text-brand.neon ml-1" />
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-2">
+                <span className="uppercase tracking-wide text-slate-500">Mode</span>
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900 px-1">
+                  {[
+                    { id: 'safe', label: 'Safe' },
+                    { id: 'balanced', label: 'Balanced' },
+                    { id: 'turbo', label: 'Turbo' }
+                  ].map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setPerfMode(m.id as PerfMode)}
+                      className={[
+                        'px-2.5 py-1 text-[11px] rounded-full',
+                        perfMode === m.id
+                          ? 'bg-brand.neon text-slate-50'
+                          : 'text-slate-300 hover:bg-slate-800'
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                  <Zap className="h-3 w-3 text-brand.neon ml-1" />
+                </div>
+              </div>
+              <div className="text-[11px] text-slate-400">
+                Current mode:{' '}
+                <span className="font-semibold text-slate-50">
+                  {perfMode === 'safe' && 'Safe · single-job, gentler'}
+                  {perfMode === 'balanced' && 'Balanced · good default'}
+                  {perfMode === 'turbo' && 'Turbo · max parallel jobs'}
+                </span>
               </div>
             </div>
           </div>
@@ -518,30 +532,70 @@ export default function Resizer() {
               </span>
             </div>
 
-            {/* Preset list (POD tab only for now) */}
+            {/* Preset / custom list */}
             <div className="flex-1 min-h-[150px] max-h-[230px] overflow-auto rounded-lg border border-slate-700 bg-slate-950/70">
               <div className="divide-y divide-slate-800 text-xs">
-                {POD_PRESETS.map(preset => (
-                  <label
-                    key={preset.id}
-                    className="flex items-center justify-between px-3 py-2 hover:bg-slate-900 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedSizes.includes(preset.id)}
-                        onChange={() => toggleSize(preset.id)}
-                        className="h-3 w-3 rounded border-slate-500 text-brand.neon focus:ring-brand.neon bg-slate-900"
-                      />
-                      <span className="text-slate-100 font-medium">
-                        {preset.label}
-                      </span>
-                      <span className="text-[11px] text-slate-400">
-                        {preset.note}
-                      </span>
-                    </div>
-                  </label>
-                ))}
+                {activeTab === 'pod' && (
+                  <>
+                    {POD_PRESETS.map(preset => (
+                      <label
+                        key={preset.id}
+                        className="flex items-center justify-between px-3 py-2 hover:bg-slate-900 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedSizes.includes(preset.id)}
+                            onChange={() => toggleSize(preset.id)}
+                            className="h-3 w-3 rounded border-slate-500 text-brand.neon focus:ring-brand.neon bg-slate-900"
+                          />
+                          <span className="text-slate-100 font-medium">
+                            {preset.label}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {preset.note}
+                          </span>
+                        </div>
+                      </label>
+                    ))}
+                  </>
+                )}
+                {activeTab === 'custom' && (
+                  <>
+                    {customSizes.length === 0 ? (
+                      <div className="px-3 py-3 text-[11px] text-slate-500">
+                        Add a custom width and height below, then click “Add size”.
+                      </div>
+                    ) : (
+                      customSizes.map(id => (
+                        <label
+                          key={id}
+                          className="flex items-center justify-between px-3 py-2 hover:bg-slate-900 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedSizes.includes(id)}
+                              onChange={() => toggleSize(id)}
+                              className="h-3 w-3 rounded border-slate-500 text-brand.neon focus:ring-brand.neon bg-slate-900"
+                            />
+                            <span className="text-slate-100 font-medium">
+                              {id.replace('x', ' × ')}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              Custom size
+                            </span>
+                          </div>
+                        </label>
+                      ))
+                    )}
+                  </>
+                )}
+                {activeTab === 'social' && (
+                  <div className="px-3 py-3 text-[11px] text-slate-500">
+                    Social presets coming soon — for now, use custom sizes or POD.
+                  </div>
+                )}
               </div>
             </div>
 
