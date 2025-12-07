@@ -29,6 +29,8 @@ interface Job {
   width: number
   height: number
   status: JobStatus
+  imageId: string
+  fileName: string
 }
 
 interface ImageInfo {
@@ -290,22 +292,29 @@ export default function Resizer() {
   }
 
 
-  const runJobsAndZip = async () => {
-    if (!activeImage || !selectedSizes.length) return
 
+  const runJobsAndZip = async () => {
+    // Require at least one image and one selected size
+    if (!images.length || !selectedSizes.length) return
+
+    // Build job list for *all* images × all selected/custom sizes
     const allIds = Array.from(new Set([...selectedSizes, ...customSizes]))
-    const parsedJobs: Job[] = allIds
-      .map(id => {
+    const parsedJobs: Job[] = []
+
+    for (const img of images) {
+      for (const id of allIds) {
         const parsed = parseSize(id)
-        if (!parsed) return null
-        return {
-          id,
+        if (!parsed) continue
+        parsedJobs.push({
+          id: `${img.id}-${id}`,
           width: parsed.width,
           height: parsed.height,
-          status: 'pending' as JobStatus
-        }
-      })
-      .filter((j): j is Job => j !== null)
+          status: 'pending',
+          imageId: img.id,
+          fileName: img.fileName
+        })
+      }
+    }
 
     if (!parsedJobs.length) return
 
@@ -323,11 +332,15 @@ export default function Resizer() {
       try {
         updateJobStatus(job.id, 'working')
 
+        // Look up the image for this job
+        const img = images.find(i => i.id === job.imageId)
+        if (!img) throw new Error('Image not found for job')
+
         let arrayBuffer: ArrayBuffer
 
         if (workerRef.current) {
           // Prefer web worker path to keep UI responsive
-          arrayBuffer = await runWorkerJob(job, activeImage)
+          arrayBuffer = await runWorkerJob(job, img)
         } else {
           // Fallback: do work on main thread if worker is unavailable
           const canvas = document.createElement('canvas')
@@ -338,8 +351,8 @@ export default function Resizer() {
 
           ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-          const srcW = activeImage.element.width
-          const srcH = activeImage.element.height
+          const srcW = img.element.width
+          const srcH = img.element.height
 
           const scale = Math.max(job.width / srcW, job.height / srcH)
           const drawW = srcW * scale
@@ -349,7 +362,7 @@ export default function Resizer() {
 
           ctx.imageSmoothingEnabled = true
           ctx.imageSmoothingQuality = 'high'
-          ctx.drawImage(activeImage.element, offsetX, offsetY, drawW, drawH)
+          ctx.drawImage(img.element, offsetX, offsetY, drawW, drawH)
 
           const blob: Blob | null = await new Promise(resolve =>
             canvas.toBlob(b => resolve(b), 'image/png', 1.0)
@@ -359,9 +372,10 @@ export default function Resizer() {
           arrayBuffer = await blob.arrayBuffer()
         }
 
+        // Tag 300 DPI
         arrayBuffer = setPngDPI(arrayBuffer, 300)
 
-        const baseName = (activeImage.fileName || 'design').replace(/\.[^.]+$/, '')
+        const baseName = (job.fileName || 'design').replace(/\.[^.]+$/, '')
         const outName = `${baseName}_${job.width}x${job.height}_300dpi.png`
 
         zip.file(outName, arrayBuffer)
@@ -377,7 +391,7 @@ export default function Resizer() {
     const queue = [...parsedJobs]
     const workers: Promise<void>[] = []
 
-    const runWorker = async () => {
+    const runWorkerLoop = async () => {
       while (queue.length) {
         const job = queue.shift()
         if (!job) break
@@ -387,18 +401,18 @@ export default function Resizer() {
 
     const workerCount = Math.min(concurrency, parsedJobs.length)
     for (let i = 0; i < workerCount; i++) {
-      workers.push(runWorker())
+      workers.push(runWorkerLoop())
     }
 
     await Promise.all(workers)
 
     setStatus('zipping')
-    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    // Use STORE compression (no DEFLATE) – PNGs are already compressed, this is much faster
+    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'STORE' })
     const url = URL.createObjectURL(zipBlob)
     const link = document.createElement('a')
-    const baseName = (activeImage.fileName || 'design').replace(/\.[^.]+$/, '')
     link.href = url
-    link.download = `${baseName}_resized_300dpi.zip`
+    link.download = `LDD_bulk_resized_300dpi.zip`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -408,7 +422,7 @@ export default function Resizer() {
   }
 
   const handleRunClick = async () => {
-    if (!activeImage || !selectedSizes.length || status !== 'idle') return
+    if (!images.length || !selectedSizes.length || status !== 'idle') return
     await runJobsAndZip()
   }
 
