@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react'
 import { Image as ImageIcon, Zap, Loader2, Download, Trash2, Settings2 } from 'lucide-react'
 import JSZip from 'jszip'
@@ -28,6 +29,21 @@ interface Job {
   width: number
   height: number
   status: JobStatus
+}
+
+interface ImageInfo {
+  width: number
+  height: number
+  sizeKB: number
+  format: string
+}
+
+interface ImageItem {
+  id: string
+  fileName: string
+  src: string
+  info: ImageInfo
+  element: HTMLImageElement
 }
 
 function crc32ForPng(buf: Uint8Array) {
@@ -81,6 +97,7 @@ function setPngDPI(pngArrayBuffer: ArrayBuffer, dpi = 300): ArrayBuffer {
 }
 
 export default function Resizer() {
+
   const [status, setStatus] = useState<'idle' | 'preparing' | 'rendering' | 'zipping'>('idle')
   const [perfMode, setPerfMode] = useState<PerfMode>('balanced')
   const [activeTab, setActiveTab] = useState<'pod' | 'social' | 'custom'>('pod')
@@ -90,17 +107,12 @@ export default function Resizer() {
   const [customHeight, setCustomHeight] = useState('')
   const [jobs, setJobs] = useState<Job[]>([])
 
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [imageSrc, setImageSrc] = useState<string | null>(null)
-  const [imageInfo, setImageInfo] = useState<{
-    width: number
-    height: number
-    sizeKB: number
-    format: string
-  } | null>(null)
-  const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null)
+  const [images, setImages] = useState<ImageItem[]>([])
+  const [activeImageId, setActiveImageId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const activeImage = images.find(img => img.id === activeImageId) ?? images[0] ?? null
 
   const toggleSize = (id: string) => {
     setSelectedSizes(prev =>
@@ -132,34 +144,65 @@ export default function Resizer() {
     fileInputRef.current?.click()
   }
 
-  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = event => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const loadFileToImageItem = (file: File): Promise<ImageItem> => {
+    return new Promise((resolve, reject) => {
+      const sizeKB = Math.round(file.size / 1024)
+      const format = file.type || 'image'
 
-    setFileName(file.name)
+      const reader = new FileReader()
+      reader.onload = e => {
+        const result = e.target?.result
+        if (!result || typeof result !== 'string') {
+          reject(new Error('Failed to read file'))
+          return
+        }
 
-    const sizeKB = Math.round(file.size / 1024)
-    const format = file.type || 'image'
-
-    const reader = new FileReader()
-    reader.onload = e => {
-      const result = e.target?.result
-      if (!result || typeof result !== 'string') return
-
-      const img = new Image()
-      img.onload = () => {
-        setImageSrc(result)
-        setImageElement(img)
-        setImageInfo({
-          width: img.width,
-          height: img.height,
-          sizeKB,
-          format
-        })
+        const img = new Image()
+        img.onload = () => {
+          const info: ImageInfo = {
+            width: img.width,
+            height: img.height,
+            sizeKB,
+            format
+          }
+          const item: ImageItem = {
+            id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            fileName: file.name,
+            src: result,
+            info,
+            element: img
+          }
+          resolve(item)
+        }
+        img.onerror = err => {
+          reject(err || new Error('Failed to load image'))
+        }
+        img.src = result
       }
-      img.src = result
+      reader.onerror = err => reject(err || new Error('Failed to read file'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = async event => {
+    const files = event.target.files
+    if (!files || !files.length) return
+
+    try {
+      const fileArray = Array.from(files)
+      const newItems = await Promise.all(fileArray.map(loadFileToImageItem))
+      setImages(prev => {
+        const merged = [...prev, ...newItems]
+        if (!activeImageId && merged.length > 0) {
+          setActiveImageId(merged[0].id)
+        }
+        return merged
+      })
+    } catch (err) {
+      console.error(err)
+    } finally {
+      event.target.value = ''
     }
-    reader.readAsDataURL(file)
   }
 
   const parseSize = (id: string): { width: number; height: number } | null => {
@@ -175,7 +218,7 @@ export default function Resizer() {
   }
 
   const runJobsAndZip = async () => {
-    if (!imageElement || !imageSrc || !selectedSizes.length) return
+    if (!activeImage || !selectedSizes.length) return
 
     const allIds = Array.from(new Set([...selectedSizes, ...customSizes]))
     const parsedJobs: Job[] = allIds
@@ -215,8 +258,8 @@ export default function Resizer() {
 
         ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        const srcW = imageElement.width
-        const srcH = imageElement.height
+        const srcW = activeImage.element.width
+        const srcH = activeImage.element.height
 
         const scale = Math.max(job.width / srcW, job.height / srcH)
         const drawW = srcW * scale
@@ -226,7 +269,7 @@ export default function Resizer() {
 
         ctx.imageSmoothingEnabled = true
         ctx.imageSmoothingQuality = 'high'
-        ctx.drawImage(imageElement, offsetX, offsetY, drawW, drawH)
+        ctx.drawImage(activeImage.element, offsetX, offsetY, drawW, drawH)
 
         const blob: Blob | null = await new Promise(resolve =>
           canvas.toBlob(b => resolve(b), 'image/png', 1.0)
@@ -236,7 +279,7 @@ export default function Resizer() {
         let arrayBuffer = await blob.arrayBuffer()
         arrayBuffer = setPngDPI(arrayBuffer, 300)
 
-        const baseName = (fileName || 'design').replace(/\.[^.]+$/, '')
+        const baseName = (activeImage.fileName || 'design').replace(/\.[^.]+$/, '')
         const outName = `${baseName}_${job.width}x${job.height}_300dpi.png`
 
         zip.file(outName, arrayBuffer)
@@ -271,7 +314,7 @@ export default function Resizer() {
     const zipBlob = await zip.generateAsync({ type: 'blob' })
     const url = URL.createObjectURL(zipBlob)
     const link = document.createElement('a')
-    const baseName = (fileName || 'design').replace(/\.[^.]+$/, '')
+    const baseName = (activeImage.fileName || 'design').replace(/\.[^.]+$/, '')
     link.href = url
     link.download = `${baseName}_resized_300dpi.zip`
     document.body.appendChild(link)
@@ -283,14 +326,14 @@ export default function Resizer() {
   }
 
   const handleRunClick = async () => {
-    if (!imageElement || !imageSrc || !selectedSizes.length || status !== 'idle') return
+    if (!activeImage || !selectedSizes.length || status !== 'idle') return
     await runJobsAndZip()
   }
 
   const formatLabel =
-    imageInfo?.format?.toLowerCase().includes('png')
+    activeImage?.info.format?.toLowerCase().includes('png')
       ? 'PNG'
-      : imageInfo?.format?.toUpperCase() || '—'
+      : activeImage?.info.format?.toUpperCase() || '—'
 
   return (
     <AppShell>
@@ -299,7 +342,7 @@ export default function Resizer() {
           Bulk Resizer
         </h1>
         <p className="text-purple-800 text-sm md:text-base max-w-2xl">
-          Purple control room edition. Drop a PNG master once, pick your sizes, and download a ZIP
+          Purple control room edition. Drop one or more PNG masters, pick your sizes, and download a ZIP
           of 300&nbsp;DPI-ready PNGs.
         </p>
       </div>
@@ -316,7 +359,7 @@ export default function Resizer() {
                 LDDTools.lol · Bulk Resizer
               </div>
               <div className="text-[11px] md:text-xs text-purple-700">
-                POD presets · mockup sizes · ZIP export
+                POD presets · mockup sizes · multi-image ZIP export
               </div>
             </div>
           </div>
@@ -387,15 +430,15 @@ export default function Resizer() {
 
         {/* Main layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Column 1: Source image */}
+          {/* Column 1: Source images */}
           <div className="rounded-2xl border border-purple-300 bg-purple-50/80 p-4 md:p-5 flex flex-col gap-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] font-semibold tracking-wide text-purple-800 uppercase">
                 Source artwork
               </span>
-              {fileName && (
+              {activeImage && (
                 <span className="text-[11px] text-purple-700 truncate max-w-[10rem]">
-                  {fileName}
+                  {activeImage.fileName}
                 </span>
               )}
             </div>
@@ -407,26 +450,28 @@ export default function Resizer() {
             >
               <ImageIcon className="h-10 w-10 mb-1 text-purple-500" />
               <span className="text-sm md:text-base text-black">
-                Drop a PNG or click to browse
+                Drop PNGs or click to browse / pick a folder
               </span>
               <span className="text-[11px] text-purple-700">
-                Transparency preserved · High-res recommended
+                Multi-select supported · Transparency preserved
               </span>
             </button>
 
             <input
               ref={fileInputRef}
               type="file"
+              multiple
+              {...({ webkitdirectory: true } as any)}
               accept="image/png,image/*"
               className="hidden"
               onChange={handleFileChange}
             />
 
-            {imageSrc && (
+            {activeImage && (
               <div className="mt-3 rounded-xl border border-purple-300 bg-white p-2">
                 <img
-                  src={imageSrc}
-                  alt={fileName ?? 'Uploaded artwork'}
+                  src={activeImage.src}
+                  alt={activeImage.fileName}
                   className="w-full max-h-64 object-contain rounded-lg bg-purple-100"
                 />
               </div>
@@ -436,13 +481,13 @@ export default function Resizer() {
               <div>
                 <dt className="uppercase mb-0.5">Resolution</dt>
                 <dd className="text-black text-xs">
-                  {imageInfo ? `${imageInfo.width} × ${imageInfo.height}` : '—'}
+                  {activeImage ? `${activeImage.info.width} × ${activeImage.info.height}` : '—'}
                 </dd>
               </div>
               <div>
                 <dt className="uppercase mb-0.5">File size</dt>
                 <dd className="text-black text-xs">
-                  {imageInfo ? `${imageInfo.sizeKB} KB` : '—'}
+                  {activeImage ? `${activeImage.info.sizeKB} KB` : '—'}
                 </dd>
               </div>
               <div>
@@ -452,6 +497,43 @@ export default function Resizer() {
                 </dd>
               </div>
             </dl>
+
+            {images.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] text-purple-800 mb-1 flex items-center justify-between">
+                  <span>
+                    Images added:{' '}
+                    <span className="font-semibold text-black">
+                      {images.length}
+                    </span>
+                  </span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {images.map(img => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => setActiveImageId(img.id)}
+                      className={[
+                        'flex-shrink-0 w-20 rounded-xl border p-1 bg-white flex flex-col items-center',
+                        activeImage && activeImage.id === img.id
+                          ? 'border-purple-500'
+                          : 'border-purple-200'
+                      ].join(' ')}
+                    >
+                      <img
+                        src={img.src}
+                        alt={img.fileName}
+                        className="w-full h-12 object-cover rounded-lg mb-1"
+                      />
+                      <span className="text-[10px] text-purple-800 truncate w-full px-1">
+                        {img.fileName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Column 2: Sizes */}
@@ -690,7 +772,7 @@ export default function Resizer() {
             <button
               type="button"
               onClick={handleRunClick}
-              disabled={!selectedSizes.length || status !== 'idle' || !imageSrc || !imageElement}
+              disabled={!selectedSizes.length || status !== 'idle' || !activeImage}
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm md:text-base font-semibold text-black border border-purple-500 shadow-md hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Download className="h-5 w-5" />
