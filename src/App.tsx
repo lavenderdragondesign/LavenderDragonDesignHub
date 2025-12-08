@@ -1,15 +1,14 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import ResizerPage from './pages/ResizerPage';
+import { Navbar } from './components/Navbar';
 
-const App: React.FC = () => {
+export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/resizer" element={<ResizerPage />} />
-    </Routes>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <Navbar />
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <h1 className="text-2xl font-bold mb-4">LDDTools.lol</h1>
+        <p className="text-slate-400">Your tool hub is ready.</p>
+      </main>
+    </div>
   );
-};
-
-export default App;
+}
