@@ -9,6 +9,7 @@ type Tool = {
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   status?: 'Ready' | 'Coming Soon';
   actionLabel?: string;
+  url?: string;
 };
 
 const tools: Tool[] = [
@@ -19,7 +20,8 @@ const tools: Tool[] = [
     description: 'Upscale AI art, photos, and print files while keeping crisp detail for Etsy and POD.',
     level: 'Intermediate',
     status: 'Ready',
-    actionLabel: 'Open Upscaler'
+    actionLabel: 'Open Upscaler',
+    url: 'https://github.com/lavenderdragondesign/lddupscalermodels'
   },
   {
     id: 'grid-mockup',
@@ -84,6 +86,16 @@ const tools: Tool[] = [
 function ToolCard({ tool }: { tool: Tool }) {
   const isComingSoon = tool.status === 'Coming Soon';
 
+  const handleClick = () => {
+    if (isComingSoon) return;
+    if (tool.url) {
+      window.open(tool.url, '_blank', 'noopener,noreferrer');
+    } else {
+      // placeholder: later this can navigate to internal routes
+      alert(`${tool.name} will be wired up inside LDDTools.lol soon.`);
+    }
+  };
+
   return (
     <div className="group flex flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm transition hover:-translate-y-1 hover:border-purple-400/60 hover:shadow-lg">
       <div className="flex items-start justify-between gap-2">
@@ -116,6 +128,7 @@ function ToolCard({ tool }: { tool: Tool }) {
       <div className="mt-4 flex items-center justify-between gap-3">
         <button
           type="button"
+          onClick={handleClick}
           className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
             isComingSoon
               ? 'cursor-not-allowed bg-slate-800 text-slate-500'
