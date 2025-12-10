@@ -127,14 +127,14 @@ function SplashOverlay() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur">
-      <div className="w-[320px] max-w-[90vw] rounded-2xl bg-white shadow-2xl p-5 text-slate-900">
+      <div className="w-[400px] max-w-[95vw] rounded-2xl bg-white shadow-2xl p-6 text-slate-900">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-purple-500 via-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-white">
             LDD
           </div>
           <div>
-            <div className="text-sm font-semibold">Welcome to LDDTools.lol</div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-base font-semibold">Welcome to LDDTools.lol</div>
+            <div className="text-xs text-slate-500">
               Little tools for big POD chaos.
             </div>
           </div>
@@ -151,7 +151,7 @@ function SplashOverlay() {
           <Sparkles className="w-4 h-4 text-emerald-300" />
           Enter LDDTools
         </button>
-        <p className="mt-2 text-[10px] text-slate-400 text-center">
+        <p className="mt-2 text-xs text-slate-400 text-center">
           This splash only shows once per browser.
         </p>
       </div>
@@ -233,17 +233,17 @@ function LandingPage() {
                       {tool.title}
                     </h2>
                     {tool.badge && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-900 text-white">
+                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-900 text-white">
                         {tool.badge}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-600">
+                  <p className="mt-1 text-sm text-slate-600">
                     {tool.desc}
                   </p>
                 </div>
               </div>
-              <div className="mt-3 text-[11px] text-slate-500 flex items-center justify-between">
+              <div className="mt-3 text-sm text-slate-500 flex items-center justify-between">
                 <span>
                   {tool.route === '/resize'
                     ? 'Open resizer'
@@ -279,7 +279,7 @@ function BulkResizerPage() {
         </div>
         <Link
           to="/"
-          className="text-[11px] px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-emerald-400"
+          className="text-sm px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-emerald-400"
         >
           ← Back to tools
         </Link>
@@ -559,7 +559,7 @@ function BulkResizer() {
         <div className="flex justify-end mb-2">
           <button
             onClick={handleClearSources}
-            className="text-[11px] px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-rose-400 hover:text-rose-300"
+            className="text-sm px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-rose-400 hover:text-rose-300"
           >
             Clear all images
           </button>
@@ -579,11 +579,11 @@ function BulkResizer() {
             >
               <Upload className="w-5 h-5 text-emerald-300" />
               <span>Drag & drop into window or click to browse</span>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-xs text-slate-500">
                 PNG or JPG • Multiple files allowed
               </span>
             </button>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Files added:{' '}
               <span className="text-emerald-300 font-medium">
                 {sources.length}
@@ -596,7 +596,7 @@ function BulkResizer() {
               <span className="font-semibold text-slate-200">Output Sizes</span>
             </div>
 
-            <div className="flex flex-wrap gap-1 text-[11px]">
+            <div className="flex flex-wrap gap-1 text-sm">
               {POD_PRESETS.map((p) => (
                 <button
                   key={p.id}
@@ -611,20 +611,20 @@ function BulkResizer() {
                   className="px-2 py-1 rounded-full border border-slate-700 bg-slate-950 hover:border-emerald-400 text-left"
                 >
                   <div className="font-semibold">{p.label}</div>
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-xs text-slate-400">
                     {p.width} × {p.height}
                   </div>
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2 text-[11px]">
+            <div className="flex items-center gap-2 text-sm">
               <input
                 type="number"
                 value={customWidth}
                 onChange={(e) => setCustomWidth(e.target.value)}
                 placeholder="Width"
-                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px]"
+                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-sm"
               />
               <span>x</span>
               <input
@@ -632,11 +632,11 @@ function BulkResizer() {
                 value={customHeight}
                 onChange={(e) => setCustomHeight(e.target.value)}
                 placeholder="Height"
-                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-[11px]"
+                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-sm"
               />
               <button
                 onClick={handleAddCustomSize}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 text-[11px] font-semibold"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 text-sm font-semibold"
               >
                 <Plus className="w-3 h-3" />
                 Add
@@ -647,7 +647,7 @@ function BulkResizer() {
               {sizes.map((s) => (
                 <span
                   key={s.id}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-950 border border-slate-700 text-[10px]"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-950 border border-slate-700 text-xs"
                 >
                   {s.id}
                   <button
@@ -659,14 +659,14 @@ function BulkResizer() {
                 </span>
               ))}
               {sizes.length === 0 && (
-                <span className="text-[11px] text-slate-500">
+                <span className="text-xs text-slate-500">
                   Add at least one size to enable resizing.
                 </span>
               )}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 space-y-2 text-[11px]">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 space-y-2 text-sm">
             <div className="text-xs font-semibold text-slate-200">
               Options
             </div>
@@ -678,7 +678,7 @@ function BulkResizer() {
                 onChange={(e) =>
                   setFormat(e.target.value as OutputFormat)
                 }
-                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px]"
+                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-sm"
               >
                 <option value="png">PNG</option>
                 <option value="jpg">JPG</option>
@@ -693,22 +693,12 @@ function BulkResizer() {
                 onChange={(e) =>
                   setBackground(e.target.value as 'transparent' | 'white')
                 }
-                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-[11px]"
+                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-sm"
               >
                 <option value="transparent">Transparent</option>
                 <option value="white">White</option>
               </select>
             </div>
-
-            <label className="flex items-center justify-between gap-2">
-              <span>Tag exports as 300 DPI (metadata)</span>
-              <input
-                type="checkbox"
-                checked={tag300dpi}
-                onChange={() => setTag300dpi((v) => !v)}
-                className="w-3 h-3 rounded border-slate-600 bg-slate-950"
-              />
-            </label>
 
             <button
               onClick={handleResizeAll}
@@ -732,7 +722,7 @@ function BulkResizer() {
               Selected Images
             </div>
             {sources.length === 0 ? (
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 No images yet. Add at least one file to begin.
               </p>
             ) : (
@@ -740,7 +730,7 @@ function BulkResizer() {
                 {sources.map((src) => (
                   <div
                     key={src.id}
-                    className="flex items-center justify-between text-[11px] rounded-lg bg-slate-950 border border-slate-800 px-2 py-1.5"
+                    className="flex items-center justify-between text-sm rounded-lg bg-slate-950 border border-slate-800 px-2 py-1.5"
                   >
                     <span className="truncate max-w-[200px]">
                       {src.name}
@@ -761,16 +751,16 @@ function BulkResizer() {
               </span>
               <button
                 onClick={handleClearQueue}
-                className="text-[11px] text-slate-500 hover:text-rose-300 flex items-center gap-1"
+                className="text-sm text-slate-500 hover:text-rose-300 flex items-center gap-1"
               >
                 <Trash2 className="w-3 h-3" />
                 Clear
               </button>
             </div>
 
-            <div className="flex-1 space-y-1 max-h-56 overflow-y-auto pr-1 text-[11px]">
+            <div className="flex-1 space-y-1 max-h-56 overflow-y-auto pr-1 text-sm">
               {queue.length === 0 && (
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs text-slate-500">
                   Queue is empty. Click “Resize All” to generate tasks.
                 </p>
               )}
@@ -815,7 +805,7 @@ function BulkResizer() {
                 <Download className="w-4 h-4" />
                 Download ZIP
               </button>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-sm text-slate-500">
                 ZIP includes all resized files, grouped by original filename.
               </p>
             </div>
@@ -834,14 +824,14 @@ function AppShell() {
       <nav className="h-12 border-b border-slate-900 bg-slate-950 flex items-center">
         <div className="max-w-5xl mx-auto px-4 flex items-center justify-between w-full">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-purple-500 via-emerald-400 to-cyan-400 flex items-center justify-center text-[10px] font-bold text-white">
+            <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-purple-500 via-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-white">
               LDD
             </div>
             <span className="text-xs font-semibold text-slate-100">
               LDDTools.lol
             </span>
           </Link>
-          <div className="text-[11px] text-slate-500">
+          <div className="text-xs text-slate-500">
             White card hub · /resize for Bulk POD Resizer
           </div>
         </div>
