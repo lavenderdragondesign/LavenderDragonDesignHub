@@ -377,7 +377,148 @@ function BulkResizer() {
     return dot === -1 ? name : name.slice(0, dot)
   }
 
-  const resizeImage = (
+  
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function crc32(buf: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i];
+    for (let j = 0; j < 8; j++) {
+      const mask = -(crc & 1);
+      crc = (crc >>> 1) ^ (0xedb88320 & mask);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function writeUint32BE(buf: Uint8Array, offset: number, value: number) {
+  buf[offset] = (value >>> 24) & 0xff;
+  buf[offset + 1] = (value >>> 16) & 0xff;
+  buf[offset + 2] = (value >>> 8) & 0xff;
+  buf[offset + 3] = value & 0xff;
+}
+
+function injectPngDpi(bytes: Uint8Array, dpi: number): Uint8Array {
+  const PNG_SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+  for (let i = 0; i < 8; i++) {
+    if (bytes[i] !== PNG_SIG[i]) return bytes;
+  }
+  const ppu = Math.round(dpi * 39.3701); // pixels per meter
+  let offset = 8;
+  let physOffset = -1;
+  let insertAfter = -1;
+
+  while (offset + 8 < bytes.length) {
+    const length =
+      (bytes[offset] << 24) |
+      (bytes[offset + 1] << 16) |
+      (bytes[offset + 2] << 8) |
+      bytes[offset + 3];
+    const typeOffset = offset + 4;
+    const dataOffset = offset + 8;
+    const type = String.fromCharCode(
+      bytes[typeOffset],
+      bytes[typeOffset + 1],
+      bytes[typeOffset + 2],
+      bytes[typeOffset + 3],
+    );
+    if (type === "IHDR") {
+      insertAfter = offset + 8 + length + 4; // after IHDR (len+type+data+crc)
+    } else if (type === "pHYs") {
+      physOffset = offset;
+      break;
+    }
+    offset = offset + 8 + length + 4;
+  }
+
+  if (physOffset !== -1) {
+    const out = bytes.slice();
+    const dataOffset = physOffset + 8;
+    writeUint32BE(out, dataOffset, ppu);
+    writeUint32BE(out, dataOffset + 4, ppu);
+    out[dataOffset + 8] = 1; // unit: meter
+    const typeAndData = out.slice(physOffset + 4, physOffset + 4 + 4 + 9);
+    const crc = crc32(typeAndData);
+    writeUint32BE(out, physOffset + 8 + 9, crc);
+    return out;
+  }
+
+  if (insertAfter === -1) return bytes;
+
+  const chunkData = new Uint8Array(9);
+  writeUint32BE(chunkData, 0, ppu);
+  writeUint32BE(chunkData, 4, ppu);
+  chunkData[8] = 1;
+  const chunkType = new Uint8Array([112, 72, 89, 115]); // "pHYs"
+  const typeAndData = new Uint8Array(4 + chunkData.length);
+  typeAndData.set(chunkType, 0);
+  typeAndData.set(chunkData, 4);
+  const crc = crc32(typeAndData);
+
+  const chunk = new Uint8Array(4 + 4 + 9 + 4);
+  writeUint32BE(chunk, 0, 9);
+  chunk.set(chunkType, 4);
+  chunk.set(chunkData, 8);
+  writeUint32BE(chunk, 8 + 9, crc);
+
+  const before = bytes.slice(0, insertAfter);
+  const after = bytes.slice(insertAfter);
+  const out = new Uint8Array(before.length + chunk.length + after.length);
+  out.set(before, 0);
+  out.set(chunk, before.length);
+  out.set(after, before.length + chunk.length);
+  return out;
+}
+
+function injectJpegDpi(bytes: Uint8Array, dpi: number): Uint8Array {
+  // minimal JFIF handler
+  if (bytes[0] !== 0xff || bytes[1] !== 0xd8) return bytes; // not JPEG
+  let offset = 2;
+  while (offset + 9 < bytes.length) {
+    if (bytes[offset] !== 0xff) {
+      offset++;
+      continue;
+    }
+    const marker = bytes[offset + 1];
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    if (marker === 0xe0) {
+      const id = String.fromCharCode(
+        bytes[offset + 4],
+        bytes[offset + 5],
+        bytes[offset + 6],
+        bytes[offset + 7],
+        bytes[offset + 8],
+      );
+      if (id === "JFIF\0") {
+        const out = bytes.slice();
+        const unitsOffset = offset + 9; // after "JFIF\0" + version(2)
+        const xDenOffset = unitsOffset + 1;
+        const yDenOffset = unitsOffset + 3;
+        out[unitsOffset] = 1; // dots per inch
+        out[xDenOffset] = (dpi >> 8) & 0xff;
+        out[xDenOffset + 1] = dpi & 0xff;
+        out[yDenOffset] = (dpi >> 8) & 0xff;
+        out[yDenOffset + 1] = dpi & 0xff;
+        return out;
+      }
+    }
+    if (length < 2) break;
+    offset += 2 + length;
+  }
+  return bytes;
+}
+
+const resizeImage = (
     file: File,
     targetWidth: number,
     targetHeight: number,
@@ -404,26 +545,26 @@ function BulkResizer() {
             ctx.clearRect(0, 0, targetWidth, targetHeight)
           }
 
+          // Simple stretch to target size
           ctx.drawImage(img, 0, 0, targetWidth, targetHeight)
 
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Failed to create blob'))
-                return
-              }
+          const quality = asFormat === 'image/jpeg' ? 0.92 : undefined
+          const dataUrl = canvas.toDataURL(asFormat, quality as any)
+          const base64 = dataUrl.split(',')[1]
+          let bytes = base64ToBytes(base64)
 
-              if (tag300dpi) {
-                // placeholder for future DPI metadata
-              }
+          if (tag300dpi) {
+            if (asFormat === 'image/png') {
+              bytes = injectPngDpi(bytes, 300)
+            } else {
+              bytes = injectJpegDpi(bytes, 300)
+            }
+          }
 
-              resolve(blob)
-            },
-            asFormat,
-            asFormat === 'image/jpeg' ? 0.92 : undefined
-          )
+          const blob = new Blob([bytes], { type: asFormat })
+          resolve(blob)
         } catch (err) {
-          reject(err)
+          reject(err as Error)
         }
       }
       img.onerror = () => reject(new Error('Image load error'))
@@ -432,7 +573,7 @@ function BulkResizer() {
     })
   }
 
-  const buildQueue = (): QueueItem[] => {
+const buildQueue = (): QueueItem[] => {
     const items: QueueItem[] = []
     for (const src of sources) {
       for (const size of sizes) {
