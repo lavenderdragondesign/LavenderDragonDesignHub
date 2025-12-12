@@ -2,21 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
-# Proxy the Upscaler app so the URL stays /upscale
 [[redirects]]
-  from = "/upscale"
-  to = "https://lddupscale.netlify.app"
-  status = 200
-  force = true
+  from = "/"
+  to = "/upscale/"
+  status = 301
 
 [[redirects]]
   from = "/upscale/*"
-  to = "https://lddupscale.netlify.app/:splat"
-  status = 200
-  force = true
-
-# SPA fallback for the hub
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
+  to = "/upscale/index.html"
   status = 200
