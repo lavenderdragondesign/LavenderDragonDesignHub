@@ -16,6 +16,7 @@ import {
   Trash2,
   Download,
   Plus,
+  Construction,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import {
@@ -99,159 +100,188 @@ const POD_PRESETS: {
 // Splash overlay
 function SplashOverlay() {
   const [visible, setVisible] = useState(false)
+  const [fading, setFading] = useState(false)
 
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return
       const seen = window.localStorage.getItem('lddtools_splash_seen')
-      if (!seen) {
-        setVisible(true)
-      }
+      if (!seen) setVisible(true)
     } catch {
       // ignore
     }
   }, [])
 
-  const dismiss = () => {
-    setVisible(false)
-    try {
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('lddtools_splash_seen', '1')
-      }
-    } catch {
-      // ignore
-    }
-  }
+  useEffect(() => {
+    if (!visible) return
+    const t = window.setTimeout(() => {
+      setFading(true)
+      window.setTimeout(() => {
+        setVisible(false)
+        try {
+          window.localStorage.setItem('lddtools_splash_seen', '1')
+        } catch {
+          // ignore
+        }
+      }, 450)
+    }, 1900)
+    return () => window.clearTimeout(t)
+  }, [visible])
 
   if (!visible) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur">
-      <div className="w-[400px] max-w-[95vw] rounded-2xl bg-white shadow-2xl p-6 text-slate-900">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-purple-500 via-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-white">
-            LDD
-          </div>
-          <div>
-            <div className="text-base font-semibold">Welcome to LDDTools.lol</div>
-            <div className="text-xs text-slate-500">
-              Little tools for big POD chaos.
-            </div>
-          </div>
+    <div
+      className={[
+        'fixed inset-0 z-50 flex items-center justify-center bg-white',
+        'transition-opacity duration-500',
+        fading ? 'opacity-0' : 'opacity-100',
+      ].join(' ')}
+    >
+      <div className="w-[560px] max-w-[95vw] px-8 py-10 rounded-3xl border border-[var(--ldd-border)] bg-white shadow-xl text-center">
+        <div className="mx-auto mb-6 h-24 w-24 rounded-3xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center text-2xl font-black text-[var(--ldd-green-dark)]">
+          LDD
         </div>
 
-        <p className="text-xs text-slate-700 mb-3">
-          This toolbox is where upscalers, resizers, mockup generators and Windows tweaks all live together. First stop: the Bulk POD Resizer.
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+          LDDTools.lol
+        </h1>
+        <p className="mt-3 text-lg text-slate-600">
+          Loading creative tools…
         </p>
 
-        <button
-          onClick={dismiss}
-          className="w-full mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-slate-50 text-xs font-semibold py-2 hover:bg-slate-800"
-        >
-          <Sparkles className="w-4 h-4 text-emerald-300" />
-          Enter LDDTools
-        </button>
-        <p className="mt-2 text-xs text-slate-400 text-center">
-          This splash only shows once per browser.
-        </p>
+        <div className="mt-7 text-sm text-slate-600">
+          (This splash only shows once per browser.)
+        </div>
       </div>
     </div>
   )
 }
 
+
 // Landing page
 function LandingPage() {
   const navigate = useNavigate()
 
-  const tools = [
+  const tools: {
+    id: string
+    title: string
+    desc: string
+    icon: React.ReactNode
+    route: string
+    enabled: boolean
+  }[] = [
     {
-      title: 'Bulk POD Resizer',
-      desc: 'Resize multiple designs into all your POD sizes in one run.',
-      icon: <Ruler className="w-5 h-5 text-emerald-500" />,
+      id: 'resize',
+      title: 'Bulk Resizer',
+      desc: 'Resize designs, inject 300 DPI, export clean packs.',
+      icon: <Ruler className="w-7 h-7 text-[var(--ldd-green-dark)]" />,
       route: '/resize',
-      badge: 'New',
+      enabled: true,
     },
     {
+      id: 'upscale',
       title: 'LDD Upscaler',
-      desc: 'Local-first upscaling for AI art and vectors (coming here soon).',
-      icon: <ImageIcon className="w-5 h-5 text-purple-500" />,
+      desc: 'Local-first upscaling for AI art + vectors.',
+      icon: <ImageIcon className="w-7 h-7 text-slate-600" />,
       route: '#',
-      badge: 'Soon',
+      enabled: false,
     },
     {
+      id: 'grid',
       title: 'Grid Mockup Generator',
-      desc: 'Etsy-ready bundle grids and mockups (hook to existing app).',
-      icon: <Grid3X3 className="w-5 h-5 text-cyan-500" />,
+      desc: 'Etsy-ready bundle grids and mockups.',
+      icon: <Grid3X3 className="w-7 h-7 text-slate-600" />,
       route: '#',
-      badge: 'External',
+      enabled: false,
     },
     {
+      id: 'pdf',
       title: 'Branded PDF Maker',
-      desc: 'Pretty download inserts with your logo and links.',
-      icon: <FileText className="w-5 h-5 text-amber-500" />,
+      desc: 'Pretty download inserts with logo + links.',
+      icon: <FileText className="w-7 h-7 text-slate-600" />,
       route: '#',
-      badge: 'Soon',
+      enabled: false,
     },
     {
+      id: 'wintweak',
       title: 'LDD WinTweaker',
       desc: 'Windows performance presets tuned for AI + Affinity.',
-      icon: <MonitorCog className="w-5 h-5 text-pink-500" />,
+      icon: <MonitorCog className="w-7 h-7 text-slate-600" />,
       route: '#',
-      badge: 'Script',
+      enabled: false,
     },
   ]
 
   return (
-    <div className="min-h-[calc(100vh-48px)] bg-slate-950 flex flex-col">
-      <div className="max-w-5xl mx-auto px-4 pt-6 pb-4">
-        <h1 className="text-base font-semibold text-white mb-1">
-          LDDTools.lol
+    <div className="min-h-[calc(100vh-56px)] bg-white">
+      <div className="max-w-6xl mx-auto px-6 pt-10 pb-8">
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
+          LDD Tools Hub
         </h1>
-        <p className="text-xs text-slate-400 max-w-xl">
-          A tiny control center for all your LavenderDragonDesign tools. Pick a card and go build something.
+        <p className="mt-3 text-lg text-slate-600 max-w-2xl">
+          Pick a tool and go make money. (Or at least make pixels behave.)
         </p>
       </div>
 
-      <div className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 pb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="max-w-6xl mx-auto px-6 pb-12">
+        <div className="flex flex-wrap justify-center gap-8">
           {tools.map((tool) => (
             <button
-              key={tool.title}
+              key={tool.id}
               onClick={() => {
-                if (tool.route === '#') return
+                if (!tool.enabled) return
                 navigate(tool.route)
               }}
-              className="group text-left rounded-2xl bg-white shadow border border-slate-200 hover:border-emerald-400/60 transition-all p-4 flex flex-col justify-between"
+              className={[
+                'relative text-left rounded-3xl border p-6 flex flex-col justify-between',
+                'w-[320px] h-[320px]',
+                tool.enabled
+                  ? 'bg-white border-[var(--ldd-border)] hover:shadow-xl hover:border-[var(--ldd-green)] transition cursor-pointer'
+                  : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed',
+              ].join(' ')}
             >
-              <div className="flex items-start gap-3">
-                <div className="shrink-0 rounded-xl bg-slate-100 p-2">
+              {!tool.enabled && (
+                <div className="absolute inset-0 rounded-3xl bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+                  <Construction className="w-10 h-10 text-gray-400" />
+                  <span className="text-sm font-extrabold uppercase tracking-wider text-gray-500">
+                    Coming Soon
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-start gap-4">
+                <div
+                  className={[
+                    'shrink-0 rounded-2xl p-3 border',
+                    tool.enabled
+                      ? 'bg-[var(--ldd-green-soft)] border-[var(--ldd-green)]'
+                      : 'bg-white border-gray-200',
+                  ].join(' ')}
+                >
                   {tool.icon}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-slate-900">
-                      {tool.title}
-                    </h2>
-                    {tool.badge && (
-                      <span className="text-xs px-1.5 py-0.5 rounded-full bg-slate-900 text-white">
-                        {tool.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">
+                    {tool.title}
+                  </h2>
+                  <p className="mt-2 text-base text-slate-600 leading-snug">
                     {tool.desc}
                   </p>
                 </div>
               </div>
-              <div className="mt-3 text-sm text-slate-500 flex items-center justify-between">
-                <span>
-                  {tool.route === '/resize'
-                    ? 'Open resizer'
-                    : tool.route === '#'
-                    ? 'Hook this up later'
-                    : 'Open tool'}
-                </span>
-                <Zap className="w-3 h-3 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <div className="mt-6">
+                <div
+                  className={[
+                    'w-full rounded-2xl px-5 py-4 text-base font-extrabold text-center',
+                    tool.enabled
+                      ? 'bg-[var(--ldd-green)] text-white hover:bg-[var(--ldd-green-dark)] transition'
+                      : 'bg-gray-300 text-gray-500',
+                  ].join(' ')}
+                >
+                  {tool.enabled ? 'Open Tool' : 'Unavailable'}
+                </div>
               </div>
             </button>
           ))}
@@ -261,36 +291,43 @@ function LandingPage() {
   )
 }
 
+
 // Bulk Resizer page wrapper
 function BulkResizerPage() {
   return (
-    <div className="min-h-[calc(100vh-48px)] bg-slate-950 text-slate-100 flex flex-col">
-      <div className="max-w-5xl mx-auto px-4 pt-6 pb-3 flex items-center justify-between">
+    <div className="min-h-[calc(100vh-56px)] bg-white text-slate-900">
+      <div className="max-w-6xl mx-auto px-6 pt-10 pb-6 flex items-start justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2">
-            <Ruler className="w-4 h-4 text-emerald-300" />
-            <h1 className="text-sm font-semibold">
-              Bulk POD Resizer
-            </h1>
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center">
+              <Ruler className="w-6 h-6 text-[var(--ldd-green-dark)]" />
+            </div>
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
+                Bulk Resizer
+              </h1>
+              <p className="mt-2 text-lg text-slate-600 max-w-2xl">
+                Drop multiple images once, export every size you need into one ZIP.
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Drop multiple images once, export all your POD Resize-tab sizes into a single ZIP.
-          </p>
         </div>
+
         <Link
           to="/"
-          className="text-sm px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-emerald-400"
+          className="shrink-0 rounded-2xl border border-[var(--ldd-border)] bg-white px-5 py-3 text-base font-bold text-slate-900 hover:bg-gray-50 transition"
         >
-          ← Back to tools
+          ← Back to hub
         </Link>
       </div>
 
-      <div className="flex-1">
+      <div className="pb-12">
         <BulkResizer />
       </div>
     </div>
   )
 }
+
 
 // BulkResizer component
 function BulkResizer() {
@@ -686,7 +723,7 @@ const buildQueue = (): QueueItem[] => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pb-8">
+    <div className="max-w-6xl mx-auto px-6 pb-12">
       <input
         ref={fileInputRef}
         type="file"
@@ -700,41 +737,41 @@ const buildQueue = (): QueueItem[] => {
         <div className="flex justify-end mb-2">
           <button
             onClick={handleClearSources}
-            className="text-sm px-2 py-1 rounded-lg border border-slate-700 text-slate-200 hover:border-rose-400 hover:text-rose-300"
+            className="text-base px-4 py-2 rounded-2xl border border-[var(--ldd-border)] text-slate-700 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50 transition"
           >
             Clear all images
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1.5fr)] gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <section className="space-y-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-              <Upload className="w-4 h-4 text-emerald-300" />
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 space-y-4 shadow-sm">
+            <div className="flex items-center gap-3 text-lg font-extrabold text-slate-900">
+              <Upload className="w-4 h-4 text-[var(--ldd-green-dark)]" />
               Upload Images
             </div>
             <button
               onClick={handleOpenFileDialog}
-              className="w-full mt-1 border border-dashed border-slate-700 rounded-xl py-5 flex flex-col items-center justify-center gap-1 text-xs hover:border-emerald-400 hover:bg-slate-900/80"
+              className="w-full mt-3 border-2 border-dashed border-[var(--ldd-border)] rounded-3xl py-10 flex flex-col items-center justify-center gap-2 text-lg font-bold hover:border-[var(--ldd-green)] hover:bg-[var(--ldd-green-soft)] transition"
             >
-              <Upload className="w-5 h-5 text-emerald-300" />
+              <Upload className="w-5 h-5 text-[var(--ldd-green-dark)]" />
               <span>Drag & drop into window or click to browse</span>
-              <span className="text-xs text-slate-500">
+              <span className="text-sm text-slate-600">
                 PNG or JPG • Multiple files allowed
               </span>
             </button>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-base text-slate-600 mt-2">
               Files added:{' '}
-              <span className="text-emerald-300 font-medium">
+              <span className="text-[var(--ldd-green-dark)] font-medium">
                 {sources.length}
               </span>
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 space-y-2">
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 space-y-4 shadow-sm">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-slate-200">Output Sizes</span>
+              <span className="font-semibold text-slate-900">Output Sizes</span>
             </div>
 
             <div className="flex flex-wrap gap-1 text-sm">
@@ -749,10 +786,10 @@ const buildQueue = (): QueueItem[] => {
                       ])
                     }
                   }}
-                  className="px-2 py-1 rounded-full border border-slate-700 bg-slate-950 hover:border-emerald-400 text-left"
+                  className="px-2 py-1 rounded-full border border-[var(--ldd-border)] bg-white hover:border-[var(--ldd-green)] text-left"
                 >
                   <div className="font-semibold">{p.label}</div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-xs text-slate-600">
                     {p.width} × {p.height}
                   </div>
                 </button>
@@ -765,7 +802,7 @@ const buildQueue = (): QueueItem[] => {
                 value={customWidth}
                 onChange={(e) => setCustomWidth(e.target.value)}
                 placeholder="Width"
-                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-sm"
+                className="w-28 px-4 py-3 rounded-2xl bg-white border-2 border-[var(--ldd-border)] text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--ldd-green)]"
               />
               <span>x</span>
               <input
@@ -773,13 +810,13 @@ const buildQueue = (): QueueItem[] => {
                 value={customHeight}
                 onChange={(e) => setCustomHeight(e.target.value)}
                 placeholder="Height"
-                className="w-20 px-2 py-1 rounded-lg bg-slate-950 border border-slate-700 text-sm"
+                className="w-28 px-4 py-3 rounded-2xl bg-white border-2 border-[var(--ldd-border)] text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--ldd-green)]"
               />
               <button
                 onClick={handleAddCustomSize}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 text-sm font-semibold"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[var(--ldd-green)] text-white text-lg font-extrabold hover:bg-[var(--ldd-green-dark)] transition"
               >
-                <Plus className="w-3 h-3" />
+                <Plus className="w-5 h-5" />
                 Add
               </button>
             </div>
@@ -788,7 +825,7 @@ const buildQueue = (): QueueItem[] => {
               {sizes.map((s) => (
                 <span
                   key={s.id}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-950 border border-slate-700 text-xs"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white border border-[var(--ldd-border)] text-xs"
                 >
                   {s.id}
                   <button
@@ -800,15 +837,15 @@ const buildQueue = (): QueueItem[] => {
                 </span>
               ))}
               {sizes.length === 0 && (
-                <span className="text-xs text-slate-500">
+                <span className="text-sm text-slate-600">
                   Add at least one size to enable resizing.
                 </span>
               )}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 space-y-2 text-sm">
-            <div className="text-xs font-semibold text-slate-200">
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 space-y-4 shadow-sm text-sm">
+            <div className="text-xs font-semibold text-slate-900">
               Options
             </div>
 
@@ -819,7 +856,7 @@ const buildQueue = (): QueueItem[] => {
                 onChange={(e) =>
                   setFormat(e.target.value as OutputFormat)
                 }
-                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-sm"
+                className="bg-white border-2 border-[var(--ldd-border)] rounded-2xl px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--ldd-green)]"
               >
                 <option value="png">PNG</option>
                 <option value="jpg">JPG</option>
@@ -834,7 +871,7 @@ const buildQueue = (): QueueItem[] => {
                 onChange={(e) =>
                   setBackground(e.target.value as 'transparent' | 'white')
                 }
-                className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-sm"
+                className="bg-white border-2 border-[var(--ldd-border)] rounded-2xl px-4 py-3 text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--ldd-green)]"
               >
                 <option value="transparent">Transparent</option>
                 <option value="white">White</option>
@@ -844,26 +881,26 @@ const buildQueue = (): QueueItem[] => {
             <button
               onClick={handleResizeAll}
               disabled={!hasImages || !hasSizes || isProcessing}
-              className={`mt-2 w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+              className={`mt-4 w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-lg font-extrabold ${
                 !hasImages || !hasSizes || isProcessing
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                  : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : 'bg-[var(--ldd-green)] text-white hover:bg-[var(--ldd-green-dark)]'
               }`}
             >
-              <Zap className="w-4 h-4" />
+              <Zap className="w-6 h-6" />
               {isProcessing ? 'Processing...' : 'Resize All'}
             </button>
           </div>
         </section>
 
         <section className="space-y-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-200 mb-2">
-              <ImageIcon className="w-4 h-4 text-emerald-300" />
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 shadow-sm">
+            <div className="flex items-center gap-3 text-lg font-extrabold text-slate-900 mb-2">
+              <ImageIcon className="w-4 h-4 text-[var(--ldd-green-dark)]" />
               Selected Images
             </div>
             {sources.length === 0 ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-sm text-slate-600">
                 No images yet. Add at least one file to begin.
               </p>
             ) : (
@@ -871,12 +908,12 @@ const buildQueue = (): QueueItem[] => {
                 {sources.map((src) => (
                   <div
                     key={src.id}
-                    className="flex items-center justify-between text-sm rounded-lg bg-slate-950 border border-slate-800 px-2 py-1.5"
+                    className="flex items-center justify-between text-sm rounded-lg bg-white border border-[var(--ldd-border)] px-2 py-1.5"
                   >
                     <span className="truncate max-w-[200px]">
                       {src.name}
                     </span>
-                    <span className="text-slate-500">
+                    <span className="text-slate-600">
                       {src.width} x {src.height}
                     </span>
                   </div>
@@ -885,14 +922,14 @@ const buildQueue = (): QueueItem[] => {
             )}
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-3 flex flex-col h-full">
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 shadow-sm flex flex-col h-full">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-200">
+              <span className="text-xs font-semibold text-slate-900">
                 Resize Queue
               </span>
               <button
                 onClick={handleClearQueue}
-                className="text-sm text-slate-500 hover:text-rose-300 flex items-center gap-1"
+                className="text-sm text-slate-600 hover:text-rose-300 flex items-center gap-1"
               >
                 <Trash2 className="w-3 h-3" />
                 Clear
@@ -901,7 +938,7 @@ const buildQueue = (): QueueItem[] => {
 
             <div className="flex-1 space-y-1 max-h-56 overflow-y-auto pr-1 text-sm">
               {queue.length === 0 && (
-                <p className="text-xs text-slate-500">
+                <p className="text-sm text-slate-600">
                   Queue is empty. Click “Resize All” to generate tasks.
                 </p>
               )}
@@ -909,7 +946,7 @@ const buildQueue = (): QueueItem[] => {
               {queue.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-lg bg-slate-950 border border-slate-800 px-2 py-1.5"
+                  className="rounded-lg bg-white border border-[var(--ldd-border)] px-2 py-1.5"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate max-w-[220px]">
@@ -918,12 +955,12 @@ const buildQueue = (): QueueItem[] => {
                     <span
                       className={
                         item.status === 'done'
-                          ? 'text-emerald-300'
+                          ? 'text-[var(--ldd-green-dark)]'
                           : item.status === 'processing'
                           ? 'text-amber-300'
                           : item.status === 'error'
                           ? 'text-rose-300'
-                          : 'text-slate-400'
+                          : 'text-slate-600'
                       }
                     >
                       {item.status}
@@ -933,20 +970,20 @@ const buildQueue = (): QueueItem[] => {
               ))}
             </div>
 
-            <div className="mt-2 border-t border-slate-800 pt-2">
+            <div className="mt-2 border-t border-[var(--ldd-border)] pt-2">
               <button
                 disabled={!zipBlob || !allDone}
                 onClick={handleDownloadZip}
-                className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
+                className={`w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-lg font-extrabold ${
                   !zipBlob || !allDone
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-[var(--ldd-green)] text-white hover:bg-[var(--ldd-green-dark)]'
                 }`}
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-6 h-6" />
                 Download ZIP
               </button>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-600">
                 ZIP includes all resized files, grouped by original filename.
               </p>
             </div>
@@ -962,18 +999,18 @@ function AppShell() {
   return (
     <Router>
       <SplashOverlay />
-      <nav className="h-12 border-b border-slate-900 bg-slate-950 flex items-center">
-        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between w-full">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-xl bg-gradient-to-br from-purple-500 via-emerald-400 to-cyan-400 flex items-center justify-center text-xs font-bold text-white">
+      <nav className="h-14 border-b border-[var(--ldd-border)] bg-white flex items-center">
+        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between w-full">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center text-sm font-black text-[var(--ldd-green-dark)]">
               LDD
             </div>
-            <span className="text-xs font-semibold text-slate-100">
+            <span className="text-base font-extrabold text-slate-900">
               LDDTools.lol
             </span>
           </Link>
-          <div className="text-xs text-slate-500">
-            White card hub · /resize for Bulk POD Resizer
+          <div className="hidden sm:block text-sm text-slate-500">
+            White UI · Green buttons · Resizer is live
           </div>
         </div>
       </nav>
@@ -985,5 +1022,6 @@ function AppShell() {
     </Router>
   )
 }
+
 
 export default AppShell

@@ -2,7 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ldd-green: #22c55e;
+  --ldd-green-dark: #16a34a;
+  --ldd-green-soft: #dcfce7;
+
+  --ldd-text: #111827;
+  --ldd-muted: #6b7280;
+
+  --ldd-border: #e5e7eb;
+  --ldd-bg: #ffffff;
+  --ldd-bg-muted: #f9fafb;
+}
+
 body {
-  @apply bg-slate-950;
+  @apply bg-white;
+  color: var(--ldd-text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
 }
