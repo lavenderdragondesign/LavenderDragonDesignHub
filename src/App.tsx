@@ -97,6 +97,8 @@ const POD_PRESETS: {
   },
 ];
 
+const LDD_LOGO_URL = 'https://raw.githubusercontent.com/lavenderdragondesign/lddupscalermodels/main/logo.png';
+
 // Splash overlay
 function SplashOverlay() {
   const [visible, setVisible] = useState(false)
@@ -139,9 +141,18 @@ function SplashOverlay() {
       ].join(' ')}
     >
       <div className="w-[560px] max-w-[95vw] px-8 py-10 rounded-3xl border border-[var(--ldd-border)] bg-white shadow-xl text-center">
-        <div className="mx-auto mb-6 h-24 w-24 rounded-3xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center text-2xl font-black text-[var(--ldd-green-dark)]">
-          LDD
-        </div>
+        <div
+        className="mx-auto mb-6 h-28 w-28 rounded-3xl border-2 border-[var(--ldd-green)] bg-white flex items-center justify-center overflow-hidden animate-pulse"
+        style={{
+          boxShadow: '0 0 28px rgba(34,197,94,.45), 0 0 72px rgba(34,197,94,.25)',
+        }}
+      >
+        <img
+          src={LDD_LOGO_URL}
+          alt="LavenderDragonDesign"
+          className="h-full w-full object-contain p-3"
+        />
+      </div>
 
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
           LDDTools.lol
@@ -216,6 +227,26 @@ function LandingPage() {
   return (
     <div className="min-h-[calc(100vh-56px)] bg-white">
       <div className="max-w-6xl mx-auto px-6 pt-10 pb-8">
+        <div className="mb-6 flex items-center gap-4">
+          <div
+            className="h-16 w-16 rounded-3xl border-2 border-[var(--ldd-green)] bg-white overflow-hidden flex items-center justify-center"
+            style={{ boxShadow: '0 0 22px rgba(34,197,94,.22)' }}
+          >
+            <img
+              src={LDD_LOGO_URL}
+              alt="LavenderDragonDesign"
+              className="h-full w-full object-contain p-2"
+            />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-slate-600">
+              LavenderDragonDesign
+            </div>
+            <div className="text-xs text-slate-500">
+              Tools for Etsy sellers + digital designers
+            </div>
+          </div>
+        </div>
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900">
           LDD Tools Hub
         </h1>
@@ -299,8 +330,15 @@ function BulkResizerPage() {
       <div className="max-w-6xl mx-auto px-6 pt-10 pb-6 flex items-start justify-between gap-6">
         <div>
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center">
-              <Ruler className="w-6 h-6 text-[var(--ldd-green-dark)]" />
+            <div
+              className="h-12 w-12 rounded-2xl border-2 border-[var(--ldd-green)] bg-white overflow-hidden flex items-center justify-center"
+              style={{ boxShadow: '0 0 18px rgba(34,197,94,.25)' }}
+            >
+              <img
+                src={LDD_LOGO_URL}
+                alt="LavenderDragonDesign"
+                className="h-full w-full object-contain p-2"
+              />
             </div>
             <div>
               <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
@@ -1002,8 +1040,15 @@ function AppShell() {
       <nav className="h-14 border-b border-[var(--ldd-border)] bg-white flex items-center">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between w-full">
           <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-[var(--ldd-green-soft)] border-2 border-[var(--ldd-green)] flex items-center justify-center text-sm font-black text-[var(--ldd-green-dark)]">
-              LDD
+            <div
+              className="h-10 w-10 rounded-2xl border border-[var(--ldd-border)] bg-white overflow-hidden flex items-center justify-center"
+              style={{ boxShadow: '0 0 16px rgba(34,197,94,.25)' }}
+            >
+              <img
+                src={LDD_LOGO_URL}
+                alt="LavenderDragonDesign"
+                className="h-full w-full object-contain p-1.5"
+              />
             </div>
             <span className="text-base font-extrabold text-slate-900">
               LDDTools.lol
