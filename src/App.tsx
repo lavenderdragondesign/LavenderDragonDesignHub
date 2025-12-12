@@ -25,6 +25,7 @@ import {
   Route,
   Link,
   useNavigate,
+  useLocation,
 } from 'react-router-dom'
 
 type OutputFormat = 'png' | 'jpg' | 'both'
@@ -758,7 +759,7 @@ const buildQueue = (): QueueItem[] => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <section className="space-y-3">
           <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 space-y-4 shadow-sm">
             <div className="flex items-center gap-3 text-lg font-extrabold text-slate-900">
@@ -936,7 +937,7 @@ const buildQueue = (): QueueItem[] => {
             )}
           </div>
 
-          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 shadow-sm flex flex-col h-full">
+          <div className="rounded-3xl border border-[var(--ldd-border)] bg-white p-8 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-900">
                 Resize Queue
@@ -1029,33 +1030,46 @@ function Footer() {
 }
 
 function AppShell() {
+  function ShellInner() {
+    const location = useLocation()
+    const isHome = location.pathname === '/'
+
+    return (
+      <>
+        <SplashOverlay />
+
+        {!isHome && (
+          <nav className="h-14 border-b border-[var(--ldd-border)] bg-white flex items-center">
+            <div className="max-w-6xl mx-auto px-6 flex items-center justify-between w-full">
+              <Link to="/" className="flex items-center gap-4">
+                <img
+                  src={LDD_LOGO_URL}
+                  alt="LavenderDragonDesign"
+                  className="h-10 w-10 rounded-full object-cover"
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(34,197,94,.18))' }}
+                />
+                <span className="text-base sm:text-lg font-extrabold text-slate-900">
+                  LavenderDragonDesign’s Tools Hub
+                </span>
+              </Link>
+            </div>
+          </nav>
+        )}
+
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/resize" element={<BulkResizerPage />} />
+        </Routes>
+
+        <Footer />
+      </>
+    )
+  }
+
   return (
     <Router>
-      <SplashOverlay />
-      <nav className="h-14 border-b border-[var(--ldd-border)] bg-white flex items-center">
-        <div className="max-w-6xl mx-auto px-6 flex items-center justify-between w-full">
-          <Link to="/" className="flex items-center gap-4">
-            <img
-              src={LDD_LOGO_URL}
-              alt="LavenderDragonDesign"
-              className="h-10 w-10 rounded-full object-cover"
-              style={{ filter: 'drop-shadow(0 0 10px rgba(34,197,94,.18))' }}
-            />
-            <span className="text-base sm:text-lg font-extrabold text-slate-900">
-              LavenderDragonDesign’s Tools Hub
-            </span>
-          </Link>
-</div>
-      </nav>
-
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/resize" element={<BulkResizerPage />} />
-      </Routes>
-
-      <Footer />
-
-      </Router>
+      <ShellInner />
+    </Router>
   )
 }
 
