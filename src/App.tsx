@@ -17,6 +17,7 @@ import {
   Download,
   Plus,
   Construction,
+  Loader2,
 } from 'lucide-react'
 import JSZip from 'jszip'
 import {
@@ -747,6 +748,27 @@ const buildQueue = (): QueueItem[] => {
         className="hidden"
         onChange={handleFileInputChange}
       />
+
+      {hasImages && (
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            onClick={handleResizeAll}
+            disabled={!hasSizes || isProcessing}
+            className={`inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-base font-extrabold shadow-lg transition ${
+              !hasSizes || isProcessing
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                : 'bg-[var(--ldd-green)] text-white hover:bg-[var(--ldd-green-dark)]'
+            }`}
+          >
+            {isProcessing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Zap className="w-5 h-5" />
+            )}
+            {isProcessing ? 'Resizing…' : 'Resize'}
+          </button>
+        </div>
+      )}
 
       {sources.length > 0 && (
         <div className="flex justify-end mb-2">
