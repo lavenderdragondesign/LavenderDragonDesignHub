@@ -1009,6 +1009,25 @@ const buildQueue = (): QueueItem[] => {
 }
 
 // App shell with router and top bar
+function Footer() {
+  return (
+    <footer className="mt-16 pb-10 flex flex-col items-center gap-4 text-sm text-slate-500">
+      <span>Made with ❤️ by Andrea</span>
+      <a
+        href="https://www.buymeacoffee.com/lavenderdragondesign"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img
+          src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png"
+          alt="Buy Me a Coffee"
+          className="h-10"
+        />
+      </a>
+    </footer>
+  )
+}
+
 function AppShell() {
   return (
     <Router>
@@ -1026,17 +1045,17 @@ function AppShell() {
               LavenderDragonDesign’s Tools Hub
             </span>
           </Link>
-          <div className="hidden sm:block text-sm text-slate-500">
-            White UI · Green buttons · Resizer is live
-          </div>
-        </div>
+</div>
       </nav>
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/resize" element={<BulkResizerPage />} />
       </Routes>
-    </Router>
+
+      <Footer />
+
+      </Router>
   )
 }
 
