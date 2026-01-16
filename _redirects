@@ -1,0 +1,2 @@
+/pdf    https://lddpdf.netlify.app   301!
+/pdf/*  https://lddpdf.netlify.app/:splat  301!
