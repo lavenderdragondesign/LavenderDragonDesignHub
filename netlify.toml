@@ -15,12 +15,12 @@
 
 [[redirects]]
 from = "/pdf"
-to = "https://https://lddpdf.netlify.app/"
+to = "https://lddpdf.netlify.app/"
 status = 301
 force = true
 
 [[redirects]]
 from = "/pdf/*"
-to = "https://https://lddpdf.netlify.app/:splat"
+to = "https://lddpdf.netlify.app/:splat"
 status = 301
 force = true
