@@ -2,6 +2,9 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  NODE_VERSION = "20"
+
 [[redirects]]
   from = "/"
   to = "/upscale/"
@@ -12,15 +15,14 @@
   to = "/upscale/index.html"
   status = 200
 
+[[redirects]]
+  from = "/pdf"
+  to = "https://lddpdf.netlify.app"
+  status = 301
+  force = true
 
 [[redirects]]
-from = "/pdf"
-to = "https://lddpdf.netlify.app/"
-status = 301
-force = true
-
-[[redirects]]
-from = "/pdf/*"
-to = "https://lddpdf.netlify.app/:splat"
-status = 301
-force = true
+  from = "/pdf/*"
+  to = "https://lddpdf.netlify.app/:splat"
+  status = 301
+  force = true
