@@ -11,3 +11,16 @@
   from = "/upscale/*"
   to = "/upscale/index.html"
   status = 200
+
+
+[[redirects]]
+from = "/pdf"
+to = "https://https://lddpdf.netlify.app/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/pdf/*"
+to = "https://https://lddpdf.netlify.app/:splat"
+status = 301
+force = true
