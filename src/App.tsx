@@ -25,7 +25,7 @@ const CARDS: Card[] = [
     title: "Bulk Image Resizer",
     desc: "Resize designs to POD-ready sizes.",
     href: "/resize",
-    features: ["Batch resize", "Common POD presets", "Fast PNG exports"],
+    features: ["Batch resize", "Common POD presets", "Fast exports"],
   },
   {
     title: "AI Upscaler",
