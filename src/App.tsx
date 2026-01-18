@@ -18,7 +18,7 @@ const CARDS: Card[] = [
   {
     title: "MyDesigns Enhancer",
     desc: "Speed helpers for MyDesigns workflows.",
-    href: "/md",
+    href: "/enhancer",
     features: ["Workflow shortcuts", "Less clicking, more doing", "Built for POD sellers"],
   },
   {
@@ -33,17 +33,18 @@ const CARDS: Card[] = [
     href: "/upscale",
     features: ["Enhance detail", "Cleaner edges", "Print-focused output"],
   },
-  {
-    title: "Prompt Engine",
-    desc: "POD-safe prompts (fast + organized).",
-    href: "/prompts",
-    features: ["Prompt + negative blocks", "IP-safe focus", "Copy-ready outputs"],
-  },
+ 
   {
     title: "Grid Mockup Generator",
     desc: "Listing preview grids that look pro.",
     href: "/grid",
     features: ["Smart layouts", "Title banners", "Quick exports"],
+  },
+    {
+    title: "LavenderDragonDesign's Scripts",
+    desc: "Automate Workflow.",
+    href: "/scripts",
+    features: ["MD Autoclicker", "Enhancer", "MD Themes"],
   },
 ]
 
