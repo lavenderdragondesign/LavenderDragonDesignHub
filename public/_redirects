@@ -1,6 +1,9 @@
-/pdf      https://lddpdf.netlify.app/                 301
-/grid     https://lddgridmockup.netlify.app/            301
-/resize/* /resize/index.html                            200
-/md       https://YOUR-MD-ENHANCER.netlify.app/         301
-/upscale  https://YOUR-UPSCALER.netlify.app/            301
-/prompts  https://YOUR-PROMPT-ENGINE.netlify.app/       301
+/pdf https://lddpdf.netlify.app 301
+/grid https://lddgridmockup.netlify.app 301
+/resize/* /resize/index.html 200
+/upscale https://lddupscale.netlify.app 301
+/scripts https://lddscripts.netlify.app 301
+/extension https://lddextension.netlify.app 301
+/enhancerscript https://lddenhancer.netlify.app 301
+/md https://YOUR-MD-ENHANCER.netlify.app 301
+/prompts https://YOUR-PROMPT-ENGINE.netlify.app 301
