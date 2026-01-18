@@ -1,0 +1,89 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0b0b10;
+  color: #fff;
+}
+
+.app {
+  padding: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.header p {
+  opacity: 0.75;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.search {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #161622;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+}
+
+.card:hover {
+  background: #1f1f2f;
+}
+
+.emoji {
+  font-size: 28px;
+}
+
+.go {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.footer {
+  margin-top: 48px;
+  opacity: 0.5;
+  font-size: 13px;
+}
+
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
