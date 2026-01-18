@@ -5,6 +5,7 @@ type Card = {
   title: string
   desc: string
   href: string
+  features: string[]
 }
 
 const CARDS: Card[] = [
@@ -12,31 +13,37 @@ const CARDS: Card[] = [
     title: "LavenderDragonDesign's PDF Generator",
     desc: "Branded Etsy download PDFs with clickable buttons.",
     href: "/pdf",
+    features: ["Drag & drop builder", "Clickable download button", "Print-ready export"],
   },
   {
     title: "MyDesigns Enhancer",
     desc: "Speed helpers for MyDesigns workflows.",
     href: "/md",
+    features: ["Workflow shortcuts", "Less clicking, more doing", "Built for POD sellers"],
   },
   {
     title: "Bulk Image Resizer",
     desc: "Resize designs to POD-ready sizes.",
     href: "/resize",
+    features: ["Batch resize", "Common POD presets", "Fast PNG exports"],
   },
   {
     title: "AI Upscaler",
     desc: "Upscale images for sharper prints.",
     href: "/upscale",
+    features: ["Enhance detail", "Cleaner edges", "Print-focused output"],
   },
   {
     title: "Prompt Engine",
     desc: "POD-safe prompts (fast + organized).",
     href: "/prompts",
+    features: ["Prompt + negative blocks", "IP-safe focus", "Copy-ready outputs"],
   },
   {
     title: "Grid Mockup Generator",
     desc: "Listing preview grids that look pro.",
     href: "/grid",
+    features: ["Smart layouts", "Title banners", "Quick exports"],
   },
 ]
 
@@ -59,7 +66,12 @@ export default function App() {
             <a key={c.href} href={c.href} className="card">
               <div className="cardInner">
                 <h2>{c.title}</h2>
-                <p>{c.desc}</p>
+                <p className="desc">{c.desc}</p>
+                <ul className="features">
+                  {c.features.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
               </div>
             </a>
           ))}
