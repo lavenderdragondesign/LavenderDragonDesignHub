@@ -1,2 +1,3 @@
 /grid     https://lddgridmockup.netlify.app/     301
 /resize/*   /resize/index.html   200
+/upscale   https://lddupscale.netlify.app/       301 
