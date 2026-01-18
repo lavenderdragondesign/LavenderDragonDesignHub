@@ -119,7 +119,7 @@ const App: React.FC = () => {
       <header className="bg-slate-900 border-b border-slate-800 px-8 py-6 flex-shrink-0 z-10 shadow-sm flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black text-white flex items-center gap-4">
-            <span className="bg-brand-600 text-white rounded-lg p-2 w-14 h-14 flex items-center justify-center text-xl shadow-lg"><img src="/ldd-logo.png" alt="LavenderDragonDesign" style="height:32px" /></span>
+            <span className="bg-brand-600 text-white rounded-lg p-2 w-14 h-14 flex items-center justify-center text-xl shadow-lg">LDD</span>
             Bulk Resizer
           </h1>
           <p className="text-lg text-slate-400 mt-2 hidden sm:block">Upload, Resize, Export. High Quality 300 DPI.</p>
