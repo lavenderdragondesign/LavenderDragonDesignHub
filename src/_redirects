@@ -1,3 +1,4 @@
+/compress https://lddcompress.netlify.app 301
 /pdf https://lddpdf.netlify.app 301
 /grid https://lddgridmockup.netlify.app 301
 /resize/ https://lddquickresizer.netlify.app
@@ -5,4 +6,3 @@
 /scripts https://lddscripts.netlify.app 301
 /extension https://lddextension.netlify.app 301
 /enhancerscript https://lddenhancer.netlify.app 301
-/compress https://lddcompress.netlify.com 301

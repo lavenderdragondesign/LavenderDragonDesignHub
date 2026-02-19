@@ -27,6 +27,16 @@ const CARDS: Card[] = [
     href: "/resize",
     features: ["Batch resize", "POD presets", "Fast exports"],
   },
+    {
+    title: "Image Compressor & Zip Splitter",
+    desc: "Compress big PNG bundles and auto-split zips for Etsy limits.",
+    href: "/compress",
+    features: [
+      "One-click PNG compression",
+      "Auto zip splitting (Part1ofX)",
+      "Space-saved stats",
+    ],
+  },
   {
     title: "AI Upscaler",
     desc: "Upscale images for sharper prints.",
