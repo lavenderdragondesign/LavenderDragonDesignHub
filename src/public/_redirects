@@ -6,3 +6,5 @@
 /extension https://lddextension.netlify.app 301
 /enhancerscript https://lddenhancer.netlify.app 301
 /* /index.html 200
+
+/compress https://lddcompress.netlify.com 301
