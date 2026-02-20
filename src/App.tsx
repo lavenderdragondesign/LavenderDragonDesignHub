@@ -6,6 +6,7 @@ type Card = {
   desc: string
   href: string
   features: string[]
+  badges?: string[]
 }
 
 const CARDS: Card[] = [
@@ -13,6 +14,7 @@ const CARDS: Card[] = [
     title: "LavenderDragonDesign's PDF Generator",
     desc: "Branded Etsy download PDFs with clickable buttons.",
     href: "/pdf",
+    badges: ["★ NEW", "★ CUSTOM PDF"],
     features: ["Drag & drop builder", "Clickable download button", "Print-ready export"],
   },
   {
@@ -27,10 +29,11 @@ const CARDS: Card[] = [
     href: "/resize",
     features: ["Batch resize", "POD presets", "Fast exports"],
   },
-    {
+  {
     title: "Image Compressor & Zip Splitter",
     desc: "Compress big PNG bundles and auto-split zips for Etsy limits.",
     href: "/compress",
+    badges: ["★ NEW"],
     features: [
       "One-click PNG compression",
       "Auto zip splitting (Part1ofX)",
@@ -41,6 +44,7 @@ const CARDS: Card[] = [
     title: "AI Upscaler",
     desc: "Upscale images for sharper prints.",
     href: "/upscale",
+    badges: ["★ IN PROGRESS"],
     features: ["Enhance detail", "Cleaner edges", "Print-focused output"],
   },
   {
@@ -80,6 +84,13 @@ export default function App() {
         <section className="grid" aria-label="Tool launcher">
           {CARDS.map((c) => (
             <a key={c.href} href={c.href} className="card">
+              {c.badges && c.badges.length > 0 && (
+                <div className="badges" aria-label="Badges">
+                  {c.badges.map((b) => (
+                    <span key={b} className="badge">{b}</span>
+                  ))}
+                </div>
+              )}
               <h2>{c.title}</h2>
               <p className="desc">{c.desc}</p>
               <ul className="features">
