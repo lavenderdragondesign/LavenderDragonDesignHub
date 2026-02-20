@@ -14,7 +14,7 @@ const CARDS: Card[] = [
     title: "LavenderDragonDesign's PDF Generator",
     desc: "Branded Etsy download PDFs with clickable buttons.",
     href: "/pdf",
-    badges: ["★ NEW", "★ CUSTOM PDF"],
+    badges: ["★ NEW", "★ BRANDED CUSTOM PDF"],
     features: ["Drag & drop builder", "Clickable download button", "Print-ready export"],
   },
   {
@@ -84,13 +84,6 @@ export default function App() {
         <section className="grid" aria-label="Tool launcher">
           {CARDS.map((c) => (
             <a key={c.href} href={c.href} className="card">
-              {c.badges && c.badges.length > 0 && (
-                <div className="badges" aria-label="Badges">
-                  {c.badges.map((b) => (
-                    <span key={b} className="badge">{b}</span>
-                  ))}
-                </div>
-              )}
               <h2>{c.title}</h2>
               <p className="desc">{c.desc}</p>
               <ul className="features">
@@ -98,6 +91,13 @@ export default function App() {
                   <li key={f}>{f}</li>
                 ))}
               </ul>
+              {c.badges && c.badges.length > 0 && (
+                <div className="badges" aria-label="Badges">
+                  {c.badges.map((b) => (
+                    <span key={b} className="badge">{b}</span>
+                  ))}
+                </div>
+              )}
             </a>
           ))}
         </section>

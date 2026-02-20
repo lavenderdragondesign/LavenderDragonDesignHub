@@ -84,7 +84,8 @@ body{
 
 .card{
   position: relative;
-  display:block;
+  display:flex;
+  flex-direction: column;
   text-decoration:none;
   color: inherit;
   background: #ffffff;
@@ -97,15 +98,16 @@ body{
 
 
 .badges{
-  position:absolute;
-  top: 14px;
-  right: 14px;
+  position: static;
   display:flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content:flex-end;
-  max-width: 70%;
+  justify-content:flex-start;
+  max-width: 100%;
+  margin-top: auto;
+  padding-top: 14px;
 }
+
 
 .badge{
   display:inline-flex;
