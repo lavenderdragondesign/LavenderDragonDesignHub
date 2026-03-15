@@ -8,6 +8,7 @@ type Card = {
   features: string[]
   badges?: string[]
   embedded?: boolean
+  statusText?: string
 }
 
 const CARDS: Card[] = [
@@ -43,16 +44,19 @@ const CARDS: Card[] = [
   },
   {
     title: 'AI Upscaler',
-    desc: 'Upscale images for sharper prints.',
+    desc: 'Not working yet inside LavenderDragonDesign Studio desktop app.',
     href: '/upscale',
     badges: ['★ IN PROGRESS'],
-    features: ['Enhance detail', 'Cleaner edges', 'Print-focused output'],
+    embedded: true,
+    statusText: 'Not working yet',
+    features: ['Coming to Studio', 'Still in progress', 'Check back later'],
   },
   {
     title: 'Scripts',
     desc: 'Now built into LavenderDragonDesign Studio desktop app.',
     href: '/scripts',
     embedded: true,
+    statusText: 'Embedded in LDD Studio desktop app',
     features: ['Launch inside Studio', 'No separate site needed', 'Use the desktop app'],
   },
   {
@@ -60,6 +64,7 @@ const CARDS: Card[] = [
     desc: 'Now handled from LavenderDragonDesign Studio desktop app.',
     href: '/extension',
     embedded: true,
+    statusText: 'Embedded in LDD Studio desktop app',
     features: ['Managed in Studio', 'Desktop-first workflow', 'Open from the app'],
   },
   {
@@ -67,15 +72,16 @@ const CARDS: Card[] = [
     desc: 'Now embedded in LavenderDragonDesign Studio desktop app.',
     href: '/enhancerscript',
     embedded: true,
+    statusText: 'Embedded in LDD Studio desktop app',
     features: ['Built into Studio', 'No separate launcher', 'Use the desktop app'],
   },
 ]
 
-function EmbeddedBadge() {
+function EmbeddedBadge({ text = 'Embedded in LDD Studio desktop app' }: { text?: string }) {
   return (
-    <div className="embeddedBadge" aria-label="Embedded in desktop app">
+    <div className="embeddedBadge" aria-label={text}>
       <span className="embeddedIconCard" aria-hidden="true">←</span>
-      <span>Embedded in LDD Studio desktop app</span>
+      <span>{text}</span>
     </div>
   )
 }
@@ -98,7 +104,7 @@ export default function App() {
           {CARDS.map((c) => {
             const content = (
               <>
-                {c.embedded && <EmbeddedBadge />}
+                {c.embedded && <EmbeddedBadge text={c.statusText} />}
                 <h2>{c.title}</h2>
                 <p className="desc">{c.desc}</p>
                 <ul className="features">
