@@ -1,0 +1,53 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/compress"
+  to = "https://lddcompress.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/pdf"
+  to = "https://lddpdf.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/grid"
+  to = "https://lddgridmockup.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/resize"
+  to = "https://lddquickresizer.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/resize/"
+  to = "https://lddquickresizer.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/upscale"
+  to = "https://lddupscale.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/scripts"
+  to = "https://lddscripts.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/extension"
+  to = "https://lddextension.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/enhancerscript"
+  to = "https://lddenhancer.netlify.app"
+  status = 301
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
